@@ -1,1 +1,1 @@
-#from .portagetool import portagetool
+from .portagetool import get_use_flags_for_package
