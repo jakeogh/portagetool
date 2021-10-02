@@ -67,6 +67,22 @@ def get_use_flags_for_package(package: str,
     return result
 
 
+def install_pkg(package: str,
+                *,
+                verbose: bool = False,
+                debug: bool = False,
+                ):
+
+    if verbose:
+        ic(package)
+
+    for line in sh.emerge('--with-bdeps=y', '-pv', '--tree', '--usepkg=n', '-u', '--ask', 'n', '-n', package, _piped=True):
+        eprint(line, end='')
+
+    for line in sh.emerge('--with-bdeps=y', '-v', '--tree', '--usepkg=n', '-u', '--ask', 'n', '-n', package, _piped=True):
+        eprint(line, end='')
+
+
 @click.group()
 @click.option('--verbose', is_flag=True)
 @click.option('--debug', is_flag=True)
