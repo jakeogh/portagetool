@@ -56,11 +56,10 @@ def get_use_flags_for_package(package: str,
                               verbose: bool,
                               debug: bool,):
 
-    #result = sh.cat(sh.equery('u', package, _piped=True))
-    result = sh.equery('u', package, _piped=True)
+    result = sh.cat(sh.equery('u', package, _piped=True))
     if verbose:
         ic(result)
-    result = [r for r in result.split('/')]
+    result = [r[1:] for r in result.split('/')]
 
     return result
 
@@ -87,7 +86,7 @@ def cli(ctx,
 @click.option('--debug', is_flag=True)
 @click.pass_context
 def use_flags_for_package(ctx,
-                          package: Path,
+                          package: str,
                           verbose: bool,
                           debug: bool,
                           ):
