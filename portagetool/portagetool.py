@@ -67,11 +67,11 @@ def get_use_flags_for_package(package: str,
     return result
 
 
-def install_pkg(package: str,
-                *,
-                verbose: bool = False,
-                debug: bool = False,
-                ):
+def install_package(package: str,
+                    *,
+                    verbose: bool = False,
+                    debug: bool = False,
+                    ):
 
     if verbose:
         ic(package)
