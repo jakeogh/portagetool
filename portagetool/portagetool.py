@@ -49,6 +49,7 @@ from asserttool import nevd
 from asserttool import validate_slice
 from asserttool import verify
 from enumerate_input import enumerate_input
+from pathtool import write_line_to_file
 from retry_on_exception import retry_on_exception
 
 
@@ -81,6 +82,22 @@ def install_package(package: str,
 
     for line in sh.emerge('--with-bdeps=y', '-v', '--tree', '--usepkg=n', '-u', '--ask', 'n', '-n', package, _piped=True):
         eprint(line, end='')
+
+
+def add_accept_keyword(package: str,
+                       *,
+                       verbose: bool = False,
+                       debug: bool = False,
+                       ):
+
+    line = "={package} **".format(package=package)
+    if verbose:
+        ic(line)
+    write_line_to_file(path=Path('/etc/portage/package.accept_keywords'),
+                       line=line + '\n',
+                       unique=True,
+                       verbose=verbose,
+                       debug=debug,)
 
 
 @click.group()
