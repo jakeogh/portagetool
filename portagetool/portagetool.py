@@ -53,10 +53,13 @@ from retry_on_exception import retry_on_exception
 
 
 def get_use_flags_for_package(package: str,
-                              verbose: bool,
-                              debug: bool,):
+                              *,
+                              verbose: bool = False,
+                              debug: bool = False,
+                              ):
 
     result = sh.cat(sh.equery('u', package, _piped=True))
+    result = result.strip()
     if verbose:
         ic(result)
     result = [r[1:] for r in result.split('\n')]
