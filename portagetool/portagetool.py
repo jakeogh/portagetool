@@ -59,7 +59,7 @@ def get_use_flags_for_package(package: str,
     result = sh.cat(sh.equery('u', package, _piped=True))
     if verbose:
         ic(result)
-    result = [r[1:] for r in result.split('/')]
+    result = [r[1:] for r in result.split('\n')]
 
     return result
 
