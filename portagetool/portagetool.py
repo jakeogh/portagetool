@@ -56,11 +56,15 @@ def get_use_flags_for_package(package: str,
                               verbose: bool,
                               debug: bool,):
 
-    result = sh.cut('-c', '2-', sh.cat(sh.equery('u', package,)))
+    cat_result = sh.cat(sh.equery('u', package, _piped=True))
     if verbose:
-        ic(result)
+        ic(cat_result)
 
-    return result
+    #result = sh.cut('-c', '2-', sh.cat(sh.equery('u', package,)))
+    #if verbose:
+    #    ic(result)
+
+    return cat_result
 
 
 @click.group()
