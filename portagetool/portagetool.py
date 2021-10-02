@@ -84,6 +84,31 @@ def install_package(package: str,
         eprint(line, end='')
 
 
+def install_package_force(package: str,
+                          *,
+                          verbose: bool = False,
+                          debug: bool = False,
+                          ):
+
+    _env = {'CONFIG_PROTECT': '-*'}
+    if verbose:
+        ic(package)
+
+    #for line in sh.emerge('--with-bdeps=y', '-pv', '--tree', '--usepkg=n', '-u', '--ask', 'n', '-n', package, _piped=True):
+    #    eprint(line, end='')
+
+    #for line in sh.emerge('--with-bdeps=y', '-v', '--tree', '--usepkg=n', '-u', '--ask', 'n', '-n', package, _piped=True):
+    #    eprint(line, end='')
+
+    for line in sh.emerge('--with-bdeps=y', '-pv',     '--tree', '--usepkg=n', '-u', '--ask', 'n', '--autounmask', '--autounmask-write', '-n', package, _env=_env, _piped=True):
+        eprint(line, end='')
+
+    #sh.emerge('--with-bdeps=y', '--quiet', '--tree', '--usepkg=n', '-u', '--ask', 'n', '--autounmask', '--autounmask-write', '-n', package, _env=_env)
+    for line in sh.emerge('--with-bdeps=y', '--quiet', '--tree', '--usepkg=n', '-u', '--ask', 'n', '--autounmask', '--autounmask-write', '-n', package, _env=_env, _piped=True):
+        eprint(line, end='')
+
+
+
 def add_accept_keyword(package: str,
                        *,
                        verbose: bool = False,
