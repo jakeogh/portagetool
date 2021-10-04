@@ -90,11 +90,14 @@ def install_package_force(package: str,
                           debug: bool = False,
                           ):
 
+    if verbose:
+        logging.basicConfig(level=logging.INFO)
     _env = os.environ.copy()
     _env['CONFIG_PROTECT'] ='-*'
     ic(package, upgrade_only)
 
     base_emerge_cmd = sh.emerge.bake('--with-bdeps=y', '--tree', '--usepkg=n', '--ask', 'n', '--autounmask', '--autounmask-write', '-n', package, _env=_env, _out=sys.stdout, _err=sys.stderr)
+    ic(base_emerge_cmd)
 
     if upgrade_only:
         base_emerge_cmd.bake('-u')
