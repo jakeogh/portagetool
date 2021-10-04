@@ -51,6 +51,7 @@ from asserttool import verify
 from enumerate_input import enumerate_input
 from pathtool import write_line_to_file
 from retry_on_exception import retry_on_exception
+from timetool import get_timestamp
 
 
 def get_use_flags_for_package(package: str,
@@ -111,6 +112,22 @@ def add_accept_keyword(package: str,
                        debug=debug,)
 
 
+#def set_use_flag(package: str,
+#                 *,
+#                 enable: bool,
+#                 verbose: bool = False,
+#                 debug: bool = False,
+#                 ):
+#
+#    assert '/' in package
+#    assert Path('/etc/portage/package.use').is_dir()
+#    destination = Path(get_timestamp() + '__' + package.replace('/', '__'))
+#    with open(destination, 'x') as fh:
+#        ic(destination)
+#
+
+
+
 @click.group()
 @click.option('--verbose', is_flag=True)
 @click.option('--debug', is_flag=True)
@@ -149,3 +166,26 @@ def use_flags_for_package(ctx,
         sys.stdout.buffer.write(flag.encode('utf8') + end)
 
 
+@cli.command('install-package')
+@click.argument("package", type=str, nargs=1)
+@click.option('--verbose', is_flag=True)
+@click.option('--debug', is_flag=True)
+@click.option('--force', is_flag=True)
+@click.pass_context
+def _install_package(ctx,
+                     package: str,
+                     verbose: bool,
+                     debug: bool,
+                     force: bool,
+                     ):
+
+    null, end, verbose, debug = nevd(ctx=ctx,
+                                     printn=False,
+                                     ipython=False,
+                                     verbose=verbose,
+                                     debug=debug,)
+
+    if force:
+        install_package_force(package=package, verbose=verbose, debug=debug)
+    else:
+        install_package(package=package, verbose=verbose, debug=debug)
