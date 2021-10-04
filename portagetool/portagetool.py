@@ -76,11 +76,7 @@ def install_package(package: str,
 
     ic(package)
     sh.emerge('--with-bdeps=y', '-pv', '--tree', '--usepkg=n', '-u', '--ask', 'n', '-n', package, _out=sys.stdout, _err=sys.stderr)
-    #for line in sh.emerge('--with-bdeps=y', '-pv', '--tree', '--usepkg=n', '-u', '--ask', 'n', '-n', package, _piped=True):
-    #    eprint(line, end='')
     sh.emerge('--with-bdeps=y', '-v', '--tree', '--usepkg=n', '-u', '--ask', 'n', '-n', package, _out=sys.stdout, _err=sys.stderr)
-    #for line in sh.emerge('--with-bdeps=y', '-v', '--tree', '--usepkg=n', '-u', '--ask', 'n', '-n', package, _piped=True):
-    #    eprint(line, end='')
 
 
 def install_package_force(package: str,
@@ -89,21 +85,13 @@ def install_package_force(package: str,
                           debug: bool = False,
                           ):
 
-    _env = {'CONFIG_PROTECT': '-*'}
+    _env = os.environ.copy()
+    _env['CONFIG_PROTECT'] ='-*'
     ic(package)
 
-    #for line in sh.emerge('--with-bdeps=y', '-pv', '--tree', '--usepkg=n', '-u', '--ask', 'n', '-n', package, _piped=True):
-    #    eprint(line, end='')
-
-    #for line in sh.emerge('--with-bdeps=y', '-v', '--tree', '--usepkg=n', '-u', '--ask', 'n', '-n', package, _piped=True):
-    #    eprint(line, end='')
-
-    for line in sh.emerge('--with-bdeps=y', '-pv',     '--tree', '--usepkg=n', '-u', '--ask', 'n', '--autounmask', '--autounmask-write', '-n', package, _env=_env, _piped=True):
-        eprint(line, end='')
-
-    #sh.emerge('--with-bdeps=y', '--quiet', '--tree', '--usepkg=n', '-u', '--ask', 'n', '--autounmask', '--autounmask-write', '-n', package, _env=_env)
-    for line in sh.emerge('--with-bdeps=y', '--quiet', '--tree', '--usepkg=n', '-u', '--ask', 'n', '--autounmask', '--autounmask-write', '-n', package, _env=_env, _piped=True):
-        eprint(line, end='')
+    sh.emerge('--with-bdeps=y', '-pv',     '--tree', '--usepkg=n', '-u', '--ask', 'n', '--autounmask', '--autounmask-write', '-n', package, _env=_env, _out=sys.stdout, _err=sys.stderr)
+    sh.emerge('--with-bdeps=y', '--quiet', '--tree', '--usepkg=n', '-u', '--ask', 'n', '--autounmask', '--autounmask-write', '-n', package, _env=_env, _out=sys.stdout, _err=sys.stderr)
+    sh.emerge('--with-bdeps=y', '--quiet', '--tree', '--usepkg=n', '-u', '--ask', 'n', '--autounmask', '--autounmask-write', '-n', package, _env=_env, _out=sys.stdout, _err=sys.stderr)
 
 
 
