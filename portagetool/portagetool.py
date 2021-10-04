@@ -175,13 +175,15 @@ def use_flags_for_package(ctx,
 @click.argument("package", type=str, nargs=1)
 @click.option('--verbose', is_flag=True)
 @click.option('--debug', is_flag=True)
-@click.option('--force', is_flag=True)
+@click.option('--force-use', is_flag=True)
+@click.option('--upgrade-only', is_flag=True)
 @click.pass_context
 def _install_package(ctx,
                      package: str,
                      verbose: bool,
                      debug: bool,
-                     force: bool,
+                     force_use: bool,
+                     upgrade_only: bool,
                      ):
 
     null, end, verbose, debug = nevd(ctx=ctx,
@@ -190,7 +192,7 @@ def _install_package(ctx,
                                      verbose=verbose,
                                      debug=debug,)
 
-    if force:
-        install_package_force(package=package, verbose=verbose, debug=debug)
+    if force_use:
+        install_package_force(package=package, verbose=verbose, debug=debug, upgrade_only=upgrade_only)
     else:
         install_package(package=package, verbose=verbose, debug=debug)
