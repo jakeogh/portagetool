@@ -91,14 +91,14 @@ def install_package_force(package: str,
     _env['CONFIG_PROTECT'] ='-*'
     ic(package)
 
-    if upgrade_only:
-        upgrade = '-u'
-    else:
-        upgrade = ''
+    base_emerge_cmd = sh.emerge.bake('--with-bdeps=y', '--tree', '--usepkg=n', '--ask', 'n', '--autounmask', '--autounmask-write', '-n', package, _env=_env, _out=sys.stdout, _err=sys.stderr)
 
-    sh.emerge('--with-bdeps=y', '-pv',     '--tree', '--usepkg=n', upgrade, '--ask', 'n', '--autounmask', '--autounmask-write', '-n', package, _env=_env, _out=sys.stdout, _err=sys.stderr)
-    sh.emerge('--with-bdeps=y', '--quiet', '--tree', '--usepkg=n', upgrade, '--ask', 'n', '--autounmask', '--autounmask-write', '-n', package, _env=_env, _out=sys.stdout, _err=sys.stderr)
-    sh.emerge('--with-bdeps=y', '--quiet', '--tree', '--usepkg=n', upgrade, '--ask', 'n', '--autounmask', '--autounmask-write', '-n', package, _env=_env, _out=sys.stdout, _err=sys.stderr)
+    if upgrade_only:
+        base_emerge_cmd.bake('-u')
+
+    base_emerge_cmd('-pv')
+    base_emerge_cmd('--quiet')
+    base_emerge_cmd('--quiet')  # a second invocation appears to be necessary, the first just writes the config changes
 
 
 def add_accept_keyword(package: str,
