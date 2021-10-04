@@ -79,8 +79,8 @@ def install_package(package: str,
         logging.basicConfig(level=logging.INFO)
 
     ic(package)
-    sh.emerge('--with-bdeps=y', '-pv', '--tree', '--usepkg=n', '-u', '--ask', 'n', '-n', package, _out=sys.stdout, _err=sys.stderr)
-    sh.emerge('--with-bdeps=y', '-v', '--tree', '--usepkg=n', '-u', '--ask', 'n', '-n', package, _out=sys.stdout, _err=sys.stderr)
+    sh.emerge('--with-bdeps=y', '-pv', '--tree', '--usepkg=n', '-u', '--ask', 'n', '--noreplace', package, _out=sys.stdout, _err=sys.stderr)
+    sh.emerge('--with-bdeps=y', '-v', '--tree', '--usepkg=n', '-u', '--ask', 'n', '--noreplace', package, _out=sys.stdout, _err=sys.stderr)
 
 
 def install_package_force(package: str,
@@ -96,7 +96,8 @@ def install_package_force(package: str,
     _env['CONFIG_PROTECT'] ='-*'
     ic(package, upgrade_only)
 
-    base_emerge_cmd = sh.emerge.bake('--with-bdeps=y', '--tree', '--usepkg=n', '--ask', 'n', '--autounmask', '--autounmask-write', '-n', package, _env=_env, _out=sys.stdout, _err=sys.stderr)
+    #base_emerge_cmd = sh.emerge.bake('--with-bdeps=y', '--tree', '--usepkg=n', '--ask', 'n', '--autounmask', '--autounmask-write', '--noreplace', package, _env=_env, _out=sys.stdout, _err=sys.stderr)
+    base_emerge_cmd = sh.emerge.bake('--with-bdeps=y', '--tree', '--usepkg=n', '--ask', 'n', '--autounmask', '--autounmask-write', package, _env=_env, _out=sys.stdout, _err=sys.stderr)
     ic(base_emerge_cmd)
 
     if upgrade_only:
