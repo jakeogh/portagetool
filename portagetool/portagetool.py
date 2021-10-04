@@ -22,6 +22,7 @@
 # pylint: disable=C0305  # Trailing newlines editor should fix automatically, pointless warning
 # pylint: disable=C0413  # TEMP isort issue [wrong-import-position] Import "from pathlib import Path" should be placed at the top of the module [C0413]
 
+import logging
 import os
 import sys
 import time
@@ -74,6 +75,8 @@ def install_package(package: str,
                     verbose: bool = False,
                     debug: bool = False,
                     ):
+    if verbose:
+        logging.basicConfig(level=logging.INFO)
 
     ic(package)
     sh.emerge('--with-bdeps=y', '-pv', '--tree', '--usepkg=n', '-u', '--ask', 'n', '-n', package, _out=sys.stdout, _err=sys.stderr)
