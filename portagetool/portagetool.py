@@ -74,12 +74,9 @@ def install_package(package: str,
                     debug: bool = False,
                     ):
 
-    if verbose:
-        ic(package)
-
+    ic(package)
     for line in sh.emerge('--with-bdeps=y', '-pv', '--tree', '--usepkg=n', '-u', '--ask', 'n', '-n', package, _piped=True):
         eprint(line, end='')
-
     for line in sh.emerge('--with-bdeps=y', '-v', '--tree', '--usepkg=n', '-u', '--ask', 'n', '-n', package, _piped=True):
         eprint(line, end='')
 
@@ -91,8 +88,7 @@ def install_package_force(package: str,
                           ):
 
     _env = {'CONFIG_PROTECT': '-*'}
-    if verbose:
-        ic(package)
+    ic(package)
 
     #for line in sh.emerge('--with-bdeps=y', '-pv', '--tree', '--usepkg=n', '-u', '--ask', 'n', '-n', package, _piped=True):
     #    eprint(line, end='')
