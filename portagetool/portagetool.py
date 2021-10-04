@@ -89,7 +89,7 @@ def install_package_force(package: str,
 
     _env = os.environ.copy()
     _env['CONFIG_PROTECT'] ='-*'
-    ic(package)
+    ic(package, upgrade_only)
 
     base_emerge_cmd = sh.emerge.bake('--with-bdeps=y', '--tree', '--usepkg=n', '--ask', 'n', '--autounmask', '--autounmask-write', '-n', package, _env=_env, _out=sys.stdout, _err=sys.stderr)
 
