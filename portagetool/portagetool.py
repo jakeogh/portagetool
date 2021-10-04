@@ -103,8 +103,8 @@ def install_package_force(package: str,
     if upgrade_only:
         base_emerge_cmd.bake('-u')
 
-    base_emerge_cmd('-pv', _ok_code=[1])
-    base_emerge_cmd('--quiet', _ok_code=[1])  # "Autounmask changes successfully written."
+    base_emerge_cmd('-pv', _ok_code=[0, 1])
+    base_emerge_cmd('--quiet', _ok_code=[0, 1])  # "Autounmask changes successfully written."
     base_emerge_cmd('--quiet')  # a second invocation appears to be necessary, the first just writes the config changes
 
 
