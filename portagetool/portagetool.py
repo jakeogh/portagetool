@@ -82,6 +82,7 @@ def install_package(package: str,
 
 def install_package_force(package: str,
                           *,
+                          upgrade_only: bool = True,
                           verbose: bool = False,
                           debug: bool = False,
                           ):
@@ -90,10 +91,14 @@ def install_package_force(package: str,
     _env['CONFIG_PROTECT'] ='-*'
     ic(package)
 
-    sh.emerge('--with-bdeps=y', '-pv',     '--tree', '--usepkg=n', '-u', '--ask', 'n', '--autounmask', '--autounmask-write', '-n', package, _env=_env, _out=sys.stdout, _err=sys.stderr)
-    sh.emerge('--with-bdeps=y', '--quiet', '--tree', '--usepkg=n', '-u', '--ask', 'n', '--autounmask', '--autounmask-write', '-n', package, _env=_env, _out=sys.stdout, _err=sys.stderr)
-    sh.emerge('--with-bdeps=y', '--quiet', '--tree', '--usepkg=n', '-u', '--ask', 'n', '--autounmask', '--autounmask-write', '-n', package, _env=_env, _out=sys.stdout, _err=sys.stderr)
+    if upgrade_only:
+        upgrade = '-u'
+    else:
+        upgrade = ''
 
+    sh.emerge('--with-bdeps=y', '-pv',     '--tree', '--usepkg=n', upgrade, '--ask', 'n', '--autounmask', '--autounmask-write', '-n', package, _env=_env, _out=sys.stdout, _err=sys.stderr)
+    sh.emerge('--with-bdeps=y', '--quiet', '--tree', '--usepkg=n', upgrade, '--ask', 'n', '--autounmask', '--autounmask-write', '-n', package, _env=_env, _out=sys.stdout, _err=sys.stderr)
+    sh.emerge('--with-bdeps=y', '--quiet', '--tree', '--usepkg=n', upgrade, '--ask', 'n', '--autounmask', '--autounmask-write', '-n', package, _env=_env, _out=sys.stdout, _err=sys.stderr)
 
 
 def add_accept_keyword(package: str,
