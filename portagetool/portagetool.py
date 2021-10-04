@@ -78,8 +78,9 @@ def install_package(package: str,
     sh.emerge('--with-bdeps=y', '-pv', '--tree', '--usepkg=n', '-u', '--ask', 'n', '-n', package, _out=sys.stdout, _err=sys.stderr)
     #for line in sh.emerge('--with-bdeps=y', '-pv', '--tree', '--usepkg=n', '-u', '--ask', 'n', '-n', package, _piped=True):
     #    eprint(line, end='')
-    for line in sh.emerge('--with-bdeps=y', '-v', '--tree', '--usepkg=n', '-u', '--ask', 'n', '-n', package, _piped=True):
-        eprint(line, end='')
+    sh.emerge('--with-bdeps=y', '-v', '--tree', '--usepkg=n', '-u', '--ask', 'n', '-n', package, _out=sys.stdout, _err=sys.stderr)
+    #for line in sh.emerge('--with-bdeps=y', '-v', '--tree', '--usepkg=n', '-u', '--ask', 'n', '-n', package, _piped=True):
+    #    eprint(line, end='')
 
 
 def install_package_force(package: str,
