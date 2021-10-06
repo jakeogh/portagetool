@@ -178,7 +178,7 @@ def use_flags_for_package(ctx,
         sys.stdout.buffer.write(flag.encode('utf8') + end)
 
 
-@cli.command('install-package')
+@cli.command('install')
 @click.argument("package", type=str, nargs=1)
 @click.option('--verbose', is_flag=True)
 @click.option('--debug', is_flag=True)
