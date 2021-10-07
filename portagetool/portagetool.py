@@ -70,42 +70,46 @@ def get_use_flags_for_package(package: str,
     return result
 
 
-def install_package(package: str,
-                    *,
-                    verbose: bool = False,
-                    debug: bool = False,
-                    ):
-    if verbose:
-        logging.basicConfig(level=logging.INFO)
+def install_packages(packages: str,
+                     *,
+                     verbose: bool = False,
+                     debug: bool = False,
+                     ):
+    #if verbose:
+    #    logging.basicConfig(level=logging.INFO)
+
+    emerge_command = sh.emerge.bake('--with-bdeps=y', '-v', '--tree', '--usepkg=n', '-u', '--ask', 'n', '--noreplace', package, _out=sys.stdout, _err=sys.stderr)
 
     ic(package)
-    sh.emerge('--with-bdeps=y', '-pv', '--tree', '--usepkg=n', '-u', '--ask', 'n', '--noreplace', package, _out=sys.stdout, _err=sys.stderr)
-    sh.emerge('--with-bdeps=y', '-v', '--tree', '--usepkg=n', '-u', '--ask', 'n', '--noreplace', package, _out=sys.stdout, _err=sys.stderr)
+    emerge_command('-p')
+    emerge_command()
 
 
-def install_package_force(package: str,
-                          *,
-                          upgrade_only: bool = True,
-                          verbose: bool = False,
-                          debug: bool = False,
-                          ):
+def install_packages_force(packages: str,
+                           *,
+                           upgrade_only: bool = True,
+                           verbose: bool = False,
+                           debug: bool = False,
+                           ):
 
     if verbose:
         logging.basicConfig(level=logging.INFO)
     _env = os.environ.copy()
     _env['CONFIG_PROTECT'] ='-*'
-    ic(package, upgrade_only)
 
-    #base_emerge_cmd = sh.emerge.bake('--with-bdeps=y', '--tree', '--usepkg=n', '--ask', 'n', '--autounmask', '--autounmask-write', '--noreplace', package, _env=_env, _out=sys.stdout, _err=sys.stderr)
+    if verbose:
+        ic(packages, upgrade_only)
+
     base_emerge_cmd = sh.emerge.bake('--with-bdeps=y', '--tree', '--usepkg=n', '--ask', 'n', '--autounmask', '--autounmask-write', package, _env=_env, _out=sys.stdout, _err=sys.stderr)
     ic(base_emerge_cmd)
 
     if upgrade_only:
         base_emerge_cmd.bake('-u')
 
+    for package in packages:
+        base_emerge_command.bake(package)
+
     base_emerge_cmd('-pv', _ok_code=[0, 1])
-    #base_emerge_cmd('--quiet', _ok_code=[0, 1])  # "Autounmask changes successfully written."
-    #base_emerge_cmd('--quiet')  # a second invocation appears to be necessary, the first just writes the config changes
     base_emerge_cmd('--quiet','--autounmask-continue')
 
 
