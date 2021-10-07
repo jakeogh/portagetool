@@ -90,7 +90,7 @@ def install_packages(packages: str,
 
 def install_packages_force(packages: str,
                            *,
-                           upgrade_only: bool = True,
+                           upgrade_only: bool = False,
                            verbose: bool = False,
                            debug: bool = False,
                            ):
