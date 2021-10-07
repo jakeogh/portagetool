@@ -78,11 +78,14 @@ def install_packages(packages: str,
     #if verbose:
     #    logging.basicConfig(level=logging.INFO)
 
-    emerge_command = sh.emerge.bake('--with-bdeps=y', '-v', '--tree', '--usepkg=n', '-u', '--ask', 'n', '--noreplace', package, _out=sys.stdout, _err=sys.stderr)
+    emerge_command = sh.emerge.bake('--with-bdeps=y', '-v', '--tree', '--usepkg=n', '-u', '--ask', 'n', '--noreplace',)
+    for package in packages:
+        ic(package)
+        emerge_command = emerge_command.bake(package)
 
     ic(package)
-    emerge_command('-p')
-    emerge_command()
+    emerge_command('-p', _out=sys.stdout, _err=sys.stderr)
+    emerge_command(_out=sys.stdout, _err=sys.stderr)
 
 
 def install_packages_force(packages: str,
@@ -100,17 +103,16 @@ def install_packages_force(packages: str,
     if verbose:
         ic(packages, upgrade_only)
 
-    base_emerge_cmd = sh.emerge.bake('--with-bdeps=y', '--tree', '--usepkg=n', '--ask', 'n', '--autounmask', '--autounmask-write', package, _env=_env, _out=sys.stdout, _err=sys.stderr)
-    ic(base_emerge_cmd)
+    emerge_command = sh.emerge.bake('-v', '--with-bdeps=y', '--tree', '--usepkg=n', '--ask', 'n', '--autounmask', '--autounmask-write',)
 
     if upgrade_only:
-        base_emerge_cmd.bake('-u')
+        emerge_command = emerge_command.bake('-u')
 
     for package in packages:
-        base_emerge_command.bake(package)
+        emerge_command = emerge_command.bake(package)
 
-    base_emerge_cmd('-pv', _ok_code=[0, 1])
-    base_emerge_cmd('--quiet','--autounmask-continue')
+    emerge_command('-p', _ok_code=[0, 1], _env=_env, _out=sys.stdout, _err=sys.stderr)
+    emerge_command('--quiet','--autounmask-continue', _env=_env, _out=sys.stdout, _err=sys.stderr)
 
 
 def add_accept_keyword(package: str,
