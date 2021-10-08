@@ -22,6 +22,7 @@
 # pylint: disable=C0305  # Trailing newlines editor should fix automatically, pointless warning
 # pylint: disable=C0413  # TEMP isort issue [wrong-import-position] Import "from pathlib import Path" should be placed at the top of the module [C0413]
 
+import glob
 import logging
 import os
 import sys
@@ -32,6 +33,7 @@ from signal import signal
 
 import click
 import sh
+from mathtool import sort_versions
 
 signal(SIGPIPE, SIG_DFL)
 from pathlib import Path
@@ -210,3 +212,25 @@ def _install_package(ctx,
         install_package_force(package=package, verbose=verbose, debug=debug, upgrade_only=upgrade_only)
     else:
         install_package(package=package, verbose=verbose, debug=debug)
+
+
+
+
+def get_latest_postgresql_version(verbose=False):
+    glob_pattern = "/etc/init.d/postgresql-*"
+    if verbose:
+        ic(glob_pattern)
+    results = glob.glob(glob_pattern)
+    if verbose:
+        ic(results)
+    if len(results) == 0:
+        raise FileNotFoundError(glob_pattern)
+    versions = [init.split('-')[-1] for init in results]
+    if verbose:
+        ic(versions)
+    versions = sort_versions(versions, verbose=verbose)
+    if verbose:
+        ic(versions)
+
+    return versions[0]
+
