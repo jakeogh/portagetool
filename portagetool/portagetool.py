@@ -57,6 +57,25 @@ from retry_on_exception import retry_on_exception
 from timetool import get_timestamp
 
 
+def get_latest_postgresql_version(verbose=False):
+    glob_pattern = "/etc/init.d/postgresql-*"
+    if verbose:
+        ic(glob_pattern)
+    results = glob.glob(glob_pattern)
+    if verbose:
+        ic(results)
+    if len(results) == 0:
+        raise FileNotFoundError(glob_pattern)
+    versions = [init.split('-')[-1] for init in results]
+    if verbose:
+        ic(versions)
+    versions = sort_versions(versions, verbose=verbose)
+    if verbose:
+        ic(versions)
+
+    return versions[0]
+
+
 def get_use_flags_for_package(package: str,
                               *,
                               verbose: bool = False,
@@ -212,25 +231,3 @@ def _install_package(ctx,
         install_package_force(package=package, verbose=verbose, debug=debug, upgrade_only=upgrade_only)
     else:
         install_package(package=package, verbose=verbose, debug=debug)
-
-
-
-
-def get_latest_postgresql_version(verbose=False):
-    glob_pattern = "/etc/init.d/postgresql-*"
-    if verbose:
-        ic(glob_pattern)
-    results = glob.glob(glob_pattern)
-    if verbose:
-        ic(results)
-    if len(results) == 0:
-        raise FileNotFoundError(glob_pattern)
-    versions = [init.split('-')[-1] for init in results]
-    if verbose:
-        ic(versions)
-    versions = sort_versions(versions, verbose=verbose)
-    if verbose:
-        ic(versions)
-
-    return versions[0]
-
