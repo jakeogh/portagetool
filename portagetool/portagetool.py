@@ -206,6 +206,26 @@ def use_flags_for_package(ctx,
         sys.stdout.buffer.write(flag.encode('utf8') + end)
 
 
+@cli.command()
+@click.argument("package", type=str, nargs=1)
+@click.option('--verbose', is_flag=True)
+@click.option('--debug', is_flag=True)
+@click.pass_context
+def files_provided_by_package(ctx,
+                              package: str,
+                              verbose: bool,
+                              debug: bool,
+                              ):
+
+    null, end, verbose, debug = nevd(ctx=ctx,
+                                     printn=False,
+                                     ipython=False,
+                                     verbose=verbose,
+                                     debug=debug,)
+
+    sh.qlist('--exact', package, _out=sys.stdout, _err=sys.stderr)
+
+
 @cli.command('install')
 @click.argument("package", type=str, nargs=1)
 @click.option('--verbose', is_flag=True)
@@ -228,6 +248,6 @@ def _install_package(ctx,
                                      debug=debug,)
 
     if force_use:
-        install_package_force(package=package, verbose=verbose, debug=debug, upgrade_only=upgrade_only)
+        install_packages_force(packages=(package,), verbose=verbose, debug=debug, upgrade_only=upgrade_only)
     else:
-        install_package(package=package, verbose=verbose, debug=debug)
+        install_packages(packages=(package,), verbose=verbose, debug=debug)
