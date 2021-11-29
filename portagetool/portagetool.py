@@ -57,6 +57,17 @@ from retry_on_exception import retry_on_exception
 from timetool import get_timestamp
 
 
+def portage_categories():
+    categories_path = Path(str(sh.portageq('get_repo_path', '/', 'gentoo').strip())) / Path('profiles') / Path('categories')
+    with open(categories_path, 'r') as fh:
+        lines = fh.readlines()
+    categories = [c.strip() for c in lines]
+    categories.append('dev-zig')
+    del lines
+    del categories_path
+    return categories
+
+
 def get_latest_postgresql_version(verbose=False):
     glob_pattern = "/etc/init.d/postgresql-*"
     if verbose:
