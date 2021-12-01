@@ -237,6 +237,26 @@ def files_provided_by_package(ctx,
     sh.qlist('--exact', package, _out=sys.stdout, _err=sys.stderr)
 
 
+@cli.command()
+@click.argument("package", type=str, nargs=1)
+@click.option('--verbose', is_flag=True)
+@click.option('--debug', is_flag=True)
+@click.pass_context
+def emerge_keepwork(ctx,
+                    package: str,
+                    verbose: bool,
+                    debug: bool,
+                    ):
+
+    null, end, verbose, debug = nevd(ctx=ctx,
+                                     printn=False,
+                                     ipython=False,
+                                     verbose=verbose,
+                                     debug=debug,)
+
+    sh.emerge('--verbose', '--tree', '--usepkg=n', package, _out=sys.stdout, _err=sys.stderr, _env={"FEATURES": "keepwork"},)
+
+
 @cli.command('install')
 @click.argument("package", type=str, nargs=1)
 @click.option('--verbose', is_flag=True)
