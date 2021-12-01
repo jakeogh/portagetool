@@ -237,7 +237,7 @@ def files_provided_by_package(ctx,
     sh.qlist('--exact', package, _out=sys.stdout, _err=sys.stderr)
 
 
-@cli.command()
+@click.command()
 @click.argument("package", type=str, nargs=1)
 @click.option('--verbose', is_flag=True)
 @click.option('--debug', is_flag=True)
