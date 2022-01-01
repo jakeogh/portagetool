@@ -49,10 +49,13 @@ from typing import Union
 from asserttool import eprint
 from asserttool import ic
 from asserttool import nevd
+from asserttool import tv
 from asserttool import validate_slice
-from asserttool import verify
+from clicktool import add_options
+from clicktool import click_global_options
 from enumerate_input import enumerate_input
 from pathtool import write_line_to_file
+from printtool import output
 from retry_on_exception import retry_on_exception
 from timetool import get_timestamp
 
@@ -90,7 +93,6 @@ def get_latest_postgresql_version(verbose=False):
 def get_use_flags_for_package(package: str,
                               *,
                               verbose: bool = False,
-                              debug: bool = False,
                               ):
 
     result = sh.cat(sh.equery('u', package, _piped=True))
@@ -105,7 +107,6 @@ def get_use_flags_for_package(package: str,
 def install_packages(packages: str,
                      *,
                      verbose: bool = False,
-                     debug: bool = False,
                      ):
     #if verbose:
     #    logging.basicConfig(level=logging.INFO)
@@ -124,7 +125,6 @@ def install_packages_force(packages: str,
                            *,
                            upgrade_only: bool = False,
                            verbose: bool = False,
-                           debug: bool = False,
                            ):
 
     if verbose:
@@ -150,7 +150,6 @@ def install_packages_force(packages: str,
 def add_accept_keyword(package: str,
                        *,
                        verbose: bool = False,
-                       debug: bool = False,
                        ):
 
     line = "={package} **".format(package=package)
@@ -160,14 +159,13 @@ def add_accept_keyword(package: str,
                        line=line + '\n',
                        unique=True,
                        verbose=verbose,
-                       debug=debug,)
+                       )
 
 
 #def set_use_flag(package: str,
 #                 *,
 #                 enable: bool,
 #                 verbose: bool = False,
-#                 debug: bool = False,
 #                 ):
 #
 #    assert '/' in package
@@ -180,105 +178,89 @@ def add_accept_keyword(package: str,
 
 
 @click.group()
-@click.option('--verbose', is_flag=True)
-@click.option('--debug', is_flag=True)
+@add_options(click_global_options)
 @click.pass_context
 def cli(ctx,
-        verbose: bool,
-        debug: bool,
+        verbose: int,
+        verbose_inf: bool,
         ):
-
-    null, end, verbose, debug = nevd(ctx=ctx,
-                                     printn=False,
-                                     ipython=False,
-                                     verbose=verbose,
-                                     debug=debug,)
-
+    tty, verbose = tv(ctx=ctx,
+                      verbose=verbose,
+                      verbose_inf=verbose_inf,
+                      )
 
 @cli.command()
 @click.argument("package", type=str, nargs=1)
-@click.option('--verbose', is_flag=True)
-@click.option('--debug', is_flag=True)
+@add_options(click_global_options)
 @click.pass_context
 def use_flags_for_package(ctx,
                           package: str,
-                          verbose: bool,
-                          debug: bool,
+                          verbose: int,
+                          verbose_inf: bool,
                           ):
+    tty, verbose = tv(ctx=ctx,
+                      verbose=verbose,
+                      verbose_inf=verbose_inf,
+                      )
 
-    null, end, verbose, debug = nevd(ctx=ctx,
-                                     printn=False,
-                                     ipython=False,
-                                     verbose=verbose,
-                                     debug=debug,)
-
-    flags = get_use_flags_for_package(package=package, verbose=verbose, debug=debug)
+    flags = get_use_flags_for_package(package=package, verbose=verbose,)
     for flag in flags:
-        sys.stdout.buffer.write(flag.encode('utf8') + end)
+        output(flag.encode('utf8'), tty=tty, verbose=verbose)
 
 
 @cli.command()
 @click.argument("package", type=str, nargs=1)
-@click.option('--verbose', is_flag=True)
-@click.option('--debug', is_flag=True)
+@add_options(click_global_options)
 @click.pass_context
 def files_provided_by_package(ctx,
                               package: str,
-                              verbose: bool,
-                              debug: bool,
+                              verbose: int,
+                              verbose_inf: bool,
                               ):
-
-    null, end, verbose, debug = nevd(ctx=ctx,
-                                     printn=False,
-                                     ipython=False,
-                                     verbose=verbose,
-                                     debug=debug,)
+    tty, verbose = tv(ctx=ctx,
+                      verbose=verbose,
+                      verbose_inf=verbose_inf,
+                      )
 
     sh.qlist('--exact', package, _out=sys.stdout, _err=sys.stderr)
 
 
 @click.command()
 @click.argument("package", type=str, nargs=1)
-@click.option('--verbose', is_flag=True)
-@click.option('--debug', is_flag=True)
+@add_options(click_global_options)
 @click.pass_context
 def emerge_keepwork(ctx,
                     package: str,
-                    verbose: bool,
-                    debug: bool,
+                    verbose: int,
+                    verbose_inf: bool,
                     ):
-
-    null, end, verbose, debug = nevd(ctx=ctx,
-                                     printn=False,
-                                     ipython=False,
-                                     verbose=verbose,
-                                     debug=debug,)
+    tty, verbose = tv(ctx=ctx,
+                      verbose=verbose,
+                      verbose_inf=verbose_inf,
+                      )
 
     sh.emerge('--verbose', '--tree', '--usepkg=n', package, _out=sys.stdout, _err=sys.stderr, _env={"FEATURES": "keepwork"},)
 
 
 @cli.command('install')
 @click.argument("package", type=str, nargs=1)
-@click.option('--verbose', is_flag=True)
-@click.option('--debug', is_flag=True)
 @click.option('--force-use', is_flag=True)
 @click.option('--upgrade-only', is_flag=True)
+@add_options(click_global_options)
 @click.pass_context
 def _install_package(ctx,
                      package: str,
-                     verbose: bool,
-                     debug: bool,
+                     verbose: int,
+                     verbose_inf: bool,
                      force_use: bool,
                      upgrade_only: bool,
                      ):
-
-    null, end, verbose, debug = nevd(ctx=ctx,
-                                     printn=False,
-                                     ipython=False,
-                                     verbose=verbose,
-                                     debug=debug,)
+    tty, verbose = tv(ctx=ctx,
+                      verbose=verbose,
+                      verbose_inf=verbose_inf,
+                      )
 
     if force_use:
-        install_packages_force(packages=(package,), verbose=verbose, debug=debug, upgrade_only=upgrade_only)
+        install_packages_force(packages=(package,), verbose=verbose, upgrade_only=upgrade_only)
     else:
-        install_packages(packages=(package,), verbose=verbose, debug=debug)
+        install_packages(packages=(package,), verbose=verbose,)
