@@ -51,7 +51,7 @@ from asserttool import ic
 from asserttool import nevd
 from asserttool import tv
 from asserttool import validate_slice
-from clicktool import add_options
+from clicktool import click_add_options
 from clicktool import click_global_options
 from enumerate_input import enumerate_input
 from pathtool import write_line_to_file
@@ -178,7 +178,7 @@ def add_accept_keyword(package: str,
 
 
 @click.group()
-@add_options(click_global_options)
+@click_add_options(click_global_options)
 @click.pass_context
 def cli(ctx,
         verbose: int,
@@ -191,7 +191,7 @@ def cli(ctx,
 
 @cli.command()
 @click.argument("package", type=str, nargs=1)
-@add_options(click_global_options)
+@click_add_options(click_global_options)
 @click.pass_context
 def use_flags_for_package(ctx,
                           package: str,
@@ -210,7 +210,7 @@ def use_flags_for_package(ctx,
 
 @cli.command()
 @click.argument("package", type=str, nargs=1)
-@add_options(click_global_options)
+@click_add_options(click_global_options)
 @click.pass_context
 def files_provided_by_package(ctx,
                               package: str,
@@ -227,7 +227,7 @@ def files_provided_by_package(ctx,
 
 @click.command()
 @click.argument("package", type=str, nargs=1)
-@add_options(click_global_options)
+@click_add_options(click_global_options)
 @click.pass_context
 def emerge_keepwork(ctx,
                     package: str,
@@ -246,7 +246,7 @@ def emerge_keepwork(ctx,
 @click.argument("package", type=str, nargs=1)
 @click.option('--force-use', is_flag=True)
 @click.option('--upgrade-only', is_flag=True)
-@add_options(click_global_options)
+@click_add_options(click_global_options)
 @click.pass_context
 def _install_package(ctx,
                      package: str,
