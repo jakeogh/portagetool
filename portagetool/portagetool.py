@@ -27,6 +27,7 @@ import logging
 import os
 import sys
 import time
+from math import inf
 from pathlib import Path
 from signal import SIG_DFL
 from signal import SIGPIPE
@@ -227,9 +228,11 @@ def files_provided_by_package(ctx,
     if tty:
         return
     qlist_stdout_lines = qlist_command.stdout.splitlines()
-    ic(qlist_stdout_lines)
+    if verbose == inf:
+        ic(qlist_stdout_lines)
     for line in qlist_stdout_lines:
-        ic(line)
+        if verbose == inf:
+            ic(line)
         output(line, tty=tty, verbose=verbose)
 
 
