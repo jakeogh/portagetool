@@ -223,10 +223,9 @@ def files_provided_by_package(ctx,
 
     qlist_command = sh.Command('qlist')
     qlist_command = qlist_command.bake('--exact', package)
+    qlist_command = qlist_command(_out=sys.stdout, _err=sys.stderr, _tee=not tty, _tty_out=tty)
     if tty:
-        qlist_command(_out=sys.stdout, _err=sys.stderr,)
         return
-    qlist_command = qlist_command()
     qlist_stdout_lines = qlist_command.stdout.split(b'\n')
     for line in qlist_stdout_lines:
         output(line, tty=tty, verbose=verbose)
