@@ -27,16 +27,10 @@ import logging
 import os
 import sys
 import time
+from pathlib import Path
 from signal import SIG_DFL
 from signal import SIGPIPE
 from signal import signal
-
-import click
-import sh
-from mathtool import sort_versions
-
-signal(SIGPIPE, SIG_DFL)
-from pathlib import Path
 from typing import ByteString
 from typing import Generator
 from typing import Iterable
@@ -46,6 +40,8 @@ from typing import Sequence
 from typing import Tuple
 from typing import Union
 
+import click
+import sh
 from asserttool import eprint
 from asserttool import ic
 from asserttool import nevd
@@ -54,10 +50,13 @@ from asserttool import validate_slice
 from clicktool import click_add_options
 from clicktool import click_global_options
 from enumerate_input import enumerate_input
+from mathtool import sort_versions
 from pathtool import write_line_to_file
 from printtool import output
 from retry_on_exception import retry_on_exception
 from timetool import get_timestamp
+
+signal(SIGPIPE, SIG_DFL)
 
 
 def portage_categories():
@@ -92,7 +91,7 @@ def get_latest_postgresql_version(verbose=False):
 
 def get_use_flags_for_package(package: str,
                               *,
-                              verbose: bool = False,
+                              verbose: Optional[int] = None,
                               ):
 
     result = sh.cat(sh.equery('u', package, _piped=True))
@@ -106,7 +105,7 @@ def get_use_flags_for_package(package: str,
 
 def install_packages(packages: str,
                      *,
-                     verbose: bool = False,
+                     verbose: Optional[int] = None,
                      ):
     #if verbose:
     #    logging.basicConfig(level=logging.INFO)
@@ -124,7 +123,7 @@ def install_packages(packages: str,
 def install_packages_force(packages: str,
                            *,
                            upgrade_only: bool = False,
-                           verbose: bool = False,
+                           verbose: Optional[int] = None,
                            ):
 
     if verbose:
@@ -149,10 +148,10 @@ def install_packages_force(packages: str,
 
 def add_accept_keyword(package: str,
                        *,
-                       verbose: bool = False,
+                       verbose: Optional[int] = None,
                        ):
 
-    line = "={package} **".format(package=package)
+    line = f"={package} **"
     if verbose:
         ic(line)
     write_line_to_file(path=Path('/etc/portage/package.accept_keywords'),
@@ -165,7 +164,7 @@ def add_accept_keyword(package: str,
 #def set_use_flag(package: str,
 #                 *,
 #                 enable: bool,
-#                 verbose: bool = False,
+#                 verbose: Optional[int] = None,
 #                 ):
 #
 #    assert '/' in package
@@ -222,7 +221,14 @@ def files_provided_by_package(ctx,
                       verbose_inf=verbose_inf,
                       )
 
-    sh.qlist('--exact', package, _out=sys.stdout, _err=sys.stderr)
+    qlist_command = sh.Command('qlist')
+    qlist_command = qlist_command.bake('--exact', package)
+    if tty:
+        qlist_command(_out=sys.stdout, _err=sys.stderr,)
+        return
+    qlist_command = qlist_command()
+    for line in qlist_command.stdout:
+        output(line, tty=tty, verbose=verbose)
 
 
 @click.command()
