@@ -212,6 +212,26 @@ def use_flags_for_package(ctx,
 @click.argument("package", type=str, nargs=1)
 @click_add_options(click_global_options)
 @click.pass_context
+def generate_patched_package_source(ctx,
+                                    package: str,
+                                    verbose: int,
+                                    verbose_inf: bool,
+                                    ):
+    tty, verbose = tv(ctx=ctx,
+                      verbose=verbose,
+                      verbose_inf=verbose_inf,
+                      )
+
+    sh_oet = {'_out': sys.stdout, '_err': sys.stderr, '_tee': True}
+
+    package = sh.equery('-q', 'list', package, **sh_oet)
+    ic(package)
+
+
+@cli.command()
+@click.argument("package", type=str, nargs=1)
+@click_add_options(click_global_options)
+@click.pass_context
 def files_provided_by_package(ctx,
                               package: str,
                               verbose: int,
