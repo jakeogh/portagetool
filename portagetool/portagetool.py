@@ -221,15 +221,18 @@ def files_provided_by_package(ctx,
                       verbose=verbose,
                       verbose_inf=verbose_inf,
                       )
+    #oet = {'_out': sys.stdout, '_err': sys.stderr, '_tee': not tty,}
+    oe = {'_out': sys.stdout, '_err': sys.stderr,}
 
     qlist_command = sh.Command('qlist')
     qlist_command = qlist_command.bake('--exact', package)
-    qlist_command = qlist_command(_out=sys.stdout, _err=sys.stderr, _tee=not tty, _tty_out=tty)
+    qlist_command = qlist_command(**oe if tty else None, _tee=not tty, _tty_out=tty)
     if tty:
         return
     qlist_stdout_lines = qlist_command.stdout.splitlines()
-    if verbose == inf:
-        ic(qlist_stdout_lines)
+    assert len(qlist_stdout_lines) >= 2
+    #if verbose == inf:
+    #    ic(qlist_stdout_lines)
     for line in qlist_stdout_lines:
         if verbose == inf:
             ic(line)
