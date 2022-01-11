@@ -227,7 +227,8 @@ def files_provided_by_package(ctx,
         qlist_command(_out=sys.stdout, _err=sys.stderr,)
         return
     qlist_command = qlist_command()
-    for line in qlist_command.stdout:
+    qlist_stdout_lines = qlist_command.stdout.split(b'\n')
+    for line in qlist_stdout_lines:
         output(line, tty=tty, verbose=verbose)
 
 
