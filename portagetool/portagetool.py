@@ -226,15 +226,16 @@ def files_provided_by_package(ctx,
 
     qlist_command = sh.Command('qlist')
     qlist_command = qlist_command.bake('--exact', package)
-    qlist_command = qlist_command(**oe if tty else None, _tee=not tty, _tty_out=tty)
-    if tty:
+    if tty:  # uug
+        qlist_command = qlist_command(**oe, _tee=not tty, _tty_out=tty)
         return
+    else:
+        qlist_command = qlist_command(_tty_out=tty)  # could drop _tty_out, sh patch testing
+
     qlist_stdout_lines = qlist_command.stdout.splitlines()
-    assert len(qlist_stdout_lines) >= 2
-    #if verbose == inf:
-    #    ic(qlist_stdout_lines)
+
     for line in qlist_stdout_lines:
-        if verbose == inf:
+        if verbose == inf:  # `verbose: int >= math inf` debug protocol works  #inf has always been a float... all `verbose: int` type annotations are wrong
             ic(line)
         output(line, tty=tty, verbose=verbose)
 
