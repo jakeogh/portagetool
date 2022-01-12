@@ -237,6 +237,8 @@ def generate_patched_package_source(ctx,
         raise FileNotFoundError(package_location_command_stdout)
     ic(package_location)
 
+    ebuild_path = Path(os.fsdecode(package_location)) / Path(os.fsdecode(package))
+    ic(ebuild_path)
     #package_ebuild =
 
 
