@@ -249,7 +249,7 @@ def generate_patched_package_source(ctx,
     ebuild_configure_command = sh.sudo.ebuild(ebuild_path, 'configure', _fg=True,)
     work_dir = Path('/var/tmp/portage') / package / Path('work')
     ic(work_dir)
-    sh.sudo.chmod('a+rx', work_dir.parent, _fg=True)
+    sh.sudo.chmod('-R', 'a+rx', work_dir.parent, _fg=True)
 
 
 @cli.command()
