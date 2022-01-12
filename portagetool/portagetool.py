@@ -240,7 +240,8 @@ def generate_patched_package_source(ctx,
     package_name_and_version = package.split(b'/')[-1]
     ebuild_path = Path(os.fsdecode(package_location)) / Path(os.fsdecode(package_name_and_version + b'.ebuild'))
     ic(ebuild_path)
-    ebuild_clean_command = sh.ebuild(ebuild_path, 'clean', **sh_oet)
+
+    ebuild_clean_command = sh.sudo.ebuild(ebuild_path, 'clean', **sh_oet, _fg=True,)
     ebuild_unpack_command = sh.ebuild(ebuild_path, 'unpack', **sh_oet)
     ebuild_unpack_command_stdout = ebuild_unpack_command.stdout.splitlines()
     ic(ebuild_unpack_command_stdout)
