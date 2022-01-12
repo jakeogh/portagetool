@@ -224,7 +224,7 @@ def generate_patched_package_source(ctx,
 
     sh_oet = {'_out': sys.stdout, '_err': sys.stderr, '_tee': True}
 
-    package = sh.equery('-q', 'list', package, **sh_oet).stdout.strip()
+    package = Path(sh.equery('-q', 'list', package, **sh_oet).stdout.decode('utf8').strip())
     ic(package)
     package_location_command = sh.equery('-q', 'meta', package, **sh_oet)
     package_location_command_stdout = package_location_command.stdout.splitlines()
@@ -237,16 +237,18 @@ def generate_patched_package_source(ctx,
         raise FileNotFoundError(package_location_command_stdout)
     ic(package_location)
 
-    package_name_and_version = package.split(b'/')[-1]
+    package_name_and_version = package.name
     ebuild_path = Path(os.fsdecode(package_location)) / Path(os.fsdecode(package_name_and_version + b'.ebuild'))
     ic(ebuild_path)
 
     ebuild_clean_command = sh.sudo.ebuild(ebuild_path, 'clean', _fg=True,)
     ebuild_unpack_command = sh.sudo.ebuild(ebuild_path, 'unpack', _fg=True,)
-    ebuild_unpack_command_stdout = ebuild_unpack_command.stdout.splitlines()
-    ic(ebuild_unpack_command_stdout)
-
-    #package_ebuild =
+    #ebuild_unpack_command_stdout = ebuild_unpack_command.stdout.splitlines()
+    #ic(ebuild_unpack_command_stdout)
+    ebuild_prepare_command = sh.sudo.ebuild(ebuild_path, 'prepare', _fg=True,)
+    ebuild_configure_command = sh.sudo.ebuild(ebuild_path, 'configure', _fg=True,)
+    work_dir = Path('/var/tmp/portage') / package / Path('work')
+    ic(work_dir)
 
 
 @cli.command()
