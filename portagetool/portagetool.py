@@ -226,6 +226,18 @@ def generate_patched_package_source(ctx,
 
     package = sh.equery('-q', 'list', package, **sh_oet)
     ic(package)
+    package_location_command = sh.sh.equery('-q', 'meta', package, **sh_oet)
+    package_location_command_stdout = package_location_command.stdout.splitlines()
+    package_location = None
+    for line in package_location_command_stdout:
+        if line.startswith('Location: '):
+            package_location = line.split(':')[-1].strip()
+
+    if not package_location:
+        raise FileNotFoundError(package_location_command_stdout)
+    ic(package_location)
+
+    #package_ebuild =
 
 
 @cli.command()
