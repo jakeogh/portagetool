@@ -239,6 +239,11 @@ def generate_patched_package_source(ctx,
 
     ebuild_path = Path(os.fsdecode(package_location)) / Path(os.fsdecode(package + b'.ebuild'))
     ic(ebuild_path)
+    ebuild_clean_command = sh.ebuild(ebuild_path, 'clean', **sh_oet)
+    ebuild_unpack_command = sh.ebuild(ebuild_path, 'unpack', **sh_oet)
+    ebuild_unpack_command_stdout = ebuild_unpack_command.stdout.splitlines()
+    ic(ebuild_unpack_command_stdout)
+
     #package_ebuild =
 
 
