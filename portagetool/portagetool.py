@@ -224,7 +224,7 @@ def generate_patched_package_source(ctx,
 
     sh_oet = {'_out': sys.stdout, '_err': sys.stderr, '_tee': True}
 
-    package = sh.equery('-q', 'list', package, **sh_oet)
+    package = sh.equery('-q', 'list', package, **sh_oet).stdout.strip()
     ic(package)
     package_location_command = sh.sh.equery('-q', 'meta', package, **sh_oet)
     package_location_command_stdout = package_location_command.stdout.splitlines()
