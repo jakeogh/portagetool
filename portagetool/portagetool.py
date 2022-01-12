@@ -238,7 +238,7 @@ def generate_patched_package_source(ctx,
     ic(package_location)
 
     package_name_and_version = package.name
-    ebuild_path = Path(os.fsdecode(package_location)) / Path(os.fsdecode(package_name_and_version + b'.ebuild'))
+    ebuild_path = Path(os.fsdecode(package_location)) / Path(os.fsdecode(package_name_and_version + '.ebuild'))
     ic(ebuild_path)
 
     ebuild_clean_command = sh.sudo.ebuild(ebuild_path, 'clean', _fg=True,)
