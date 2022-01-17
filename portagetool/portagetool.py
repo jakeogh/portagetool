@@ -280,9 +280,12 @@ def files_provided_by_package(ctx,
     qlist_command = qlist_command.bake('--exact', package)
 
     _tty_out = {}
+    _oe = {}
     if not tty:
         _tty_out = {'_tty_out': False}
-    qlist_command = qlist_command(_out=sys.stdout, _err=sys.stderr, _tee=not tty, **_tty_out)
+    if tty:
+        _oe = {'_out': sys.stdout, '_err': sys.stderr,}
+    qlist_command = qlist_command(_tee=not tty, **_oe, **_tty_out)
     if tty:
         return
 
