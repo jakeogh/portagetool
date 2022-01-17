@@ -289,6 +289,7 @@ def files_provided_by_package(ctx,
     qlist_stdout_lines = qlist_command.stdout.splitlines()
 
     for line in qlist_stdout_lines:
+        ic(line)
         if verbose == inf:  # `verbose: int >= math inf` debug protocol works  #inf has always been a float... all `verbose: int` type annotations are wrong
             ic(line)
         output(line, tty=tty, verbose=verbose)
