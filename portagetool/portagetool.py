@@ -52,8 +52,8 @@ from clicktool import click_add_options
 from clicktool import click_global_options
 from enumerate_input import enumerate_input
 from mathtool import sort_versions
+from mptool import output
 from pathtool import write_line_to_file
-from printtool import output
 from retry_on_exception import retry_on_exception
 from timetool import get_timestamp
 
