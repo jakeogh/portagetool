@@ -45,7 +45,7 @@ from asserttool import ic
 from clicktool import click_add_options
 from clicktool import click_global_options
 from clicktool import tv
-#from enumerate_input import enumerate_input
+#from unmp import unmp
 from mathtool import sort_versions
 from mptool import output
 from pathtool import write_line_to_file
@@ -91,7 +91,7 @@ def get_use_flags_for_package(package: str,
                               verbose: Union[bool, int, float],
                               ):
 
-    result = sh.cat(sh.equery('u', package, _piped=True))
+    result = sh.cat(sh.equery('uses', package, _piped=True))
     result = result.strip()
     if verbose:
         ic(result)
@@ -99,6 +99,19 @@ def get_use_flags_for_package(package: str,
 
     return result
 
+
+def resolve_and_check_package_name(package: str,
+                                   *,
+                                   verbose: Union[bool, int, float],
+                                   ):
+
+    result = sh.cat(sh.equery('check', package, _piped=True))
+    result = result.strip()
+    if verbose:
+        ic(result)
+    #result = [r[1:] for r in result.split('\n')]
+
+    return result
 
 def install_packages(packages: str,
                      *,
@@ -158,7 +171,7 @@ def add_accept_keyword(package: str,
                        )
 
 
-@click.group()
+@click.group(no_args_is_help=True)
 @click_add_options(click_global_options)
 @click.pass_context
 def cli(ctx,
@@ -307,3 +320,21 @@ def _install_package(ctx,
         install_packages_force(packages=(package,), verbose=verbose, upgrade_only=upgrade_only)
     else:
         install_packages(packages=(package,), verbose=verbose,)
+
+
+@cli.command('resolve')
+@click.argument("package", type=str, nargs=1)
+@click_add_options(click_global_options)
+@click.pass_context
+def _resolve_package(ctx,
+                     package: str,
+                     verbose: Union[bool, int, float],
+                     verbose_inf: bool,
+                     ):
+    tty, verbose = tv(ctx=ctx,
+                      verbose=verbose,
+                      verbose_inf=verbose_inf,
+                      )
+
+    result = resolve_and_check_package_name(package=package, verbose=verbose,)
+    output(result, tty=tty, verbose=verbose)
