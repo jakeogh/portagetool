@@ -122,7 +122,7 @@ def resolve_package_name(package: str,
                          ):
 
     #result = sh.cat(sh.equery('check', package, _piped=True))
-    result = sh.equery('list', package,)
+    result = sh.equery('--quiet', 'list', package,)
     result = result.strip()
     if verbose:
         ic(result)
