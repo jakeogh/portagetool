@@ -100,19 +100,35 @@ def get_use_flags_for_package(package: str,
     return result
 
 
-def resolve_and_check_package_name(package: str,
-                                   *,
-                                   verbose: Union[bool, int, float],
-                                   ):
+## broken, equery check > bla fails
+#def resolve_and_check_package_name(package: str,
+#                                   *,
+#                                   verbose: Union[bool, int, float],
+#                                   ):
+#
+#    #result = sh.cat(sh.equery('check', package, _piped=True))
+#    result = sh.equery('check', package,)
+#    result = result.strip()
+#    if verbose:
+#        ic(result)
+#    #result = [r[1:] for r in result.split('\n')]
+#
+#    return result
+
+
+def resolve_package_name(package: str,
+                         *,
+                         verbose: Union[bool, int, float],
+                         ):
 
     #result = sh.cat(sh.equery('check', package, _piped=True))
-    result = sh.equery('check', package,)
+    result = sh.equery('list', package,)
     result = result.strip()
     if verbose:
         ic(result)
     #result = [r[1:] for r in result.split('\n')]
-
     return result
+
 
 def install_packages(packages: str,
                      *,
@@ -337,5 +353,6 @@ def _resolve_package(ctx,
                       verbose_inf=verbose_inf,
                       )
 
-    result = resolve_and_check_package_name(package=package, verbose=verbose,)
+    #result = resolve_and_check_package_name(package=package, verbose=verbose,)
+    result = resolve_package_name(package=package, verbose=verbose,)
     output(result, tty=tty, verbose=verbose)
