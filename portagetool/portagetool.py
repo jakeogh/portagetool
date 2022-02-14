@@ -105,7 +105,8 @@ def resolve_and_check_package_name(package: str,
                                    verbose: Union[bool, int, float],
                                    ):
 
-    result = sh.cat(sh.equery('check', package, _piped=True))
+    #result = sh.cat(sh.equery('check', package, _piped=True))
+    result = sh.equery('check', package,)
     result = result.strip()
     if verbose:
         ic(result)
