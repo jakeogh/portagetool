@@ -26,36 +26,32 @@ import glob
 import logging
 import os
 import sys
-import time
 from math import inf
 from pathlib import Path
 from signal import SIG_DFL
 from signal import SIGPIPE
 from signal import signal
-from typing import ByteString
-from typing import Generator
-from typing import Iterable
-from typing import List
+#from typing import Sequence
+#from typing import Tuple
+#from typing import List
 from typing import Optional
-from typing import Sequence
-from typing import Tuple
 from typing import Union
 
 import click
 import sh
-from asserttool import eprint
+#from eprint import eprint
 from asserttool import ic
-from asserttool import nevd
-from asserttool import tv
-from asserttool import validate_slice
+#from asserttool import validate_slice
 from clicktool import click_add_options
 from clicktool import click_global_options
-from enumerate_input import enumerate_input
+from clicktool import tv
+#from enumerate_input import enumerate_input
 from mathtool import sort_versions
 from mptool import output
 from pathtool import write_line_to_file
-from retry_on_exception import retry_on_exception
-from timetool import get_timestamp
+
+#from retry_on_exception import retry_on_exception
+#from timetool import get_timestamp
 
 signal(SIGPIPE, SIG_DFL)
 
@@ -71,7 +67,7 @@ def portage_categories():
     return categories
 
 
-def get_latest_postgresql_version(verbose=False):
+def get_latest_postgresql_version(verbose: Union[bool, int, float],):
     glob_pattern = "/etc/init.d/postgresql-*"
     if verbose:
         ic(glob_pattern)
@@ -92,7 +88,7 @@ def get_latest_postgresql_version(verbose=False):
 
 def get_use_flags_for_package(package: str,
                               *,
-                              verbose: Optional[int] = None,
+                              verbose: Union[bool, int, float],
                               ):
 
     result = sh.cat(sh.equery('u', package, _piped=True))
@@ -106,7 +102,7 @@ def get_use_flags_for_package(package: str,
 
 def install_packages(packages: str,
                      *,
-                     verbose: Optional[int] = None,
+                     verbose: Union[bool, int, float],
                      ):
     #if verbose:
     #    logging.basicConfig(level=logging.INFO)
@@ -124,7 +120,7 @@ def install_packages(packages: str,
 def install_packages_force(packages: str,
                            *,
                            upgrade_only: bool = False,
-                           verbose: Optional[int] = None,
+                           verbose: Union[bool, int, float],
                            ):
 
     if verbose:
@@ -149,7 +145,7 @@ def install_packages_force(packages: str,
 
 def add_accept_keyword(package: str,
                        *,
-                       verbose: Optional[int] = None,
+                       verbose: Union[bool, int, float],
                        ):
 
     line = f"={package} **"
@@ -162,26 +158,11 @@ def add_accept_keyword(package: str,
                        )
 
 
-#def set_use_flag(package: str,
-#                 *,
-#                 enable: bool,
-#                 verbose: Optional[int] = None,
-#                 ):
-#
-#    assert '/' in package
-#    assert Path('/etc/portage/package.use').is_dir()
-#    destination = Path(get_timestamp() + '__' + package.replace('/', '__'))
-#    with open(destination, 'x') as fh:
-#        ic(destination)
-#
-
-
-
 @click.group()
 @click_add_options(click_global_options)
 @click.pass_context
 def cli(ctx,
-        verbose: int,
+        verbose: Union[bool, int, float],
         verbose_inf: bool,
         ):
     tty, verbose = tv(ctx=ctx,
@@ -195,7 +176,7 @@ def cli(ctx,
 @click.pass_context
 def use_flags_for_package(ctx,
                           package: str,
-                          verbose: int,
+                          verbose: Union[bool, int, float],
                           verbose_inf: bool,
                           ):
     tty, verbose = tv(ctx=ctx,
@@ -214,7 +195,7 @@ def use_flags_for_package(ctx,
 @click.pass_context
 def generate_patched_package_source(ctx,
                                     package: str,
-                                    verbose: int,
+                                    verbose: Union[bool, int, float],
                                     verbose_inf: bool,
                                     ):
     tty, verbose = tv(ctx=ctx,
@@ -258,7 +239,7 @@ def generate_patched_package_source(ctx,
 @click.pass_context
 def files_provided_by_package(ctx,
                               package: str,
-                              verbose: int,
+                              verbose: Union[bool, int, float],
                               verbose_inf: bool,
                               ):
     tty, verbose = tv(ctx=ctx,
@@ -293,7 +274,7 @@ def files_provided_by_package(ctx,
 @click.pass_context
 def emerge_keepwork(ctx,
                     package: str,
-                    verbose: int,
+                    verbose: Union[bool, int, float],
                     verbose_inf: bool,
                     ):
     tty, verbose = tv(ctx=ctx,
@@ -312,7 +293,7 @@ def emerge_keepwork(ctx,
 @click.pass_context
 def _install_package(ctx,
                      package: str,
-                     verbose: int,
+                     verbose: Union[bool, int, float],
                      verbose_inf: bool,
                      force_use: bool,
                      upgrade_only: bool,
