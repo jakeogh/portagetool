@@ -31,10 +31,10 @@ from pathlib import Path
 from signal import SIG_DFL
 from signal import SIGPIPE
 from signal import signal
-#from typing import Sequence
 #from typing import Tuple
 #from typing import List
 from typing import Optional
+from typing import Sequence
 from typing import Union
 
 import click
@@ -119,7 +119,7 @@ def get_use_flags_for_package(package: str,
 def resolve_package_name(package: str,
                          *,
                          verbose: Union[bool, int, float],
-                         ):
+                         ) -> str:
 
     #result = sh.cat(sh.equery('check', package, _piped=True))
     result = sh.equery('--quiet', 'list', package,)
@@ -130,10 +130,39 @@ def resolve_package_name(package: str,
     return result
 
 
-def install_packages(packages: str,
+def get_python_dependency(package: str,
+                          *,
+                          verbose: Union[bool, int, float],
+                          ) -> bool:
+
+    result = sh.equery('--quiet', 'uses', package,)
+    result = result.strip()
+    for line in result.splitlines():
+        if verbose:
+            ic(line)
+        if line.startswith(b'+python_targets_python'):
+            return True
+    return False
+
+
+def generate_ebuild_dependency_line(package: str,
+                                    *,
+                                    verbose: Union[bool, int, float],
+                                    ):
+    package = resolve_package_name(package, verbose=verbose,)
+    line = f"\t{package}"
+    if get_python_dependency(package, verbose=verbose,):
+        line += '[${PYTHON_USEDEP}]'
+
+    if verbose:
+        ic(line)
+    return line
+
+
+def install_packages(packages: Sequence[str],
                      *,
                      verbose: Union[bool, int, float],
-                     ):
+                     ) -> None:
     #if verbose:
     #    logging.basicConfig(level=logging.INFO)
 
@@ -147,11 +176,11 @@ def install_packages(packages: str,
     emerge_command(_out=sys.stdout, _err=sys.stderr)
 
 
-def install_packages_force(packages: str,
+def install_packages_force(packages: Sequence[str],
                            *,
                            upgrade_only: bool = False,
                            verbose: Union[bool, int, float],
-                           ):
+                           ) -> None:
 
     if verbose:
         logging.basicConfig(level=logging.INFO)
@@ -176,7 +205,7 @@ def install_packages_force(packages: str,
 def add_accept_keyword(package: str,
                        *,
                        verbose: Union[bool, int, float],
-                       ):
+                       ) -> None:
 
     line = f"={package} **"
     if verbose:
@@ -194,7 +223,7 @@ def add_accept_keyword(package: str,
 def cli(ctx,
         verbose: Union[bool, int, float],
         verbose_inf: bool,
-        ):
+        ) -> None:
     tty, verbose = tv(ctx=ctx,
                       verbose=verbose,
                       verbose_inf=verbose_inf,
@@ -208,7 +237,7 @@ def use_flags_for_package(ctx,
                           package: str,
                           verbose: Union[bool, int, float],
                           verbose_inf: bool,
-                          ):
+                          ) -> None:
     tty, verbose = tv(ctx=ctx,
                       verbose=verbose,
                       verbose_inf=verbose_inf,
@@ -227,7 +256,7 @@ def generate_patched_package_source(ctx,
                                     package: str,
                                     verbose: Union[bool, int, float],
                                     verbose_inf: bool,
-                                    ):
+                                    ) -> None:
     tty, verbose = tv(ctx=ctx,
                       verbose=verbose,
                       verbose_inf=verbose_inf,
@@ -271,7 +300,7 @@ def files_provided_by_package(ctx,
                               package: str,
                               verbose: Union[bool, int, float],
                               verbose_inf: bool,
-                              ):
+                              ) -> None:
     tty, verbose = tv(ctx=ctx,
                       verbose=verbose,
                       verbose_inf=verbose_inf,
@@ -306,7 +335,7 @@ def emerge_keepwork(ctx,
                     package: str,
                     verbose: Union[bool, int, float],
                     verbose_inf: bool,
-                    ):
+                    ) -> None:
     tty, verbose = tv(ctx=ctx,
                       verbose=verbose,
                       verbose_inf=verbose_inf,
@@ -327,7 +356,7 @@ def _install_package(ctx,
                      verbose_inf: bool,
                      force_use: bool,
                      upgrade_only: bool,
-                     ):
+                     ) -> None:
     tty, verbose = tv(ctx=ctx,
                       verbose=verbose,
                       verbose_inf=verbose_inf,
@@ -347,12 +376,11 @@ def _resolve_package(ctx,
                      package: str,
                      verbose: Union[bool, int, float],
                      verbose_inf: bool,
-                     ):
+                     ) -> None:
     tty, verbose = tv(ctx=ctx,
                       verbose=verbose,
                       verbose_inf=verbose_inf,
                       )
 
-    #result = resolve_and_check_package_name(package=package, verbose=verbose,)
     result = resolve_package_name(package=package, verbose=verbose,)
     output(result, tty=tty, verbose=verbose)
