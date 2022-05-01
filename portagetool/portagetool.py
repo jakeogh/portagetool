@@ -297,18 +297,53 @@ def use_flags_for_package(
         verbose_inf=verbose_inf,
     )
 
+    assert "/" in package
     flags = get_use_flags_for_package(
         package=package,
         verbose=verbose,
     )
     for flag in flags:
         output(
-            flag.encode("utf8"),
+            flag.encode("utf8"),  # hm.
             reason=package,
             dict_input=dict_input,
             tty=tty,
             verbose=verbose,
         )
+
+
+@cli.command()
+@click.argument("package", type=str, nargs=1)
+@click.argument("flag", type=str, nargs=1)
+@click_add_options(click_global_options)
+@click.pass_context
+def set_use_flag_for_package(
+    ctx,
+    package: str,
+    flag: str,
+    verbose: Union[bool, int, float],
+    verbose_inf: bool,
+    dict_input: bool,
+) -> None:
+    tty, verbose = tv(
+        ctx=ctx,
+        verbose=verbose,
+        verbose_inf=verbose_inf,
+    )
+
+    valid_flags = get_use_flags_for_package(
+        package=package,
+        verbose=verbose,
+    )
+
+    assert "/" in package
+    raw_flag = flag
+    if flag.startswith("-"):
+        raw_flag = flag[1:]
+
+    assert raw_flag in valid_flags
+
+    assert False
 
 
 @cli.command()
@@ -328,6 +363,7 @@ def generate_patched_package_source(
         verbose_inf=verbose_inf,
     )
 
+    assert "/" in package
     sh_oet = {"_out": sys.stdout, "_err": sys.stderr, "_tee": True}
 
     package = Path(
@@ -398,6 +434,7 @@ def files_provided_by_package(
     qlist_command = sh.Command("qlist")
     qlist_command = qlist_command.bake("--exact", package)
 
+    assert "/" in package
     _tty_out = {}
     _oe = {}
     if not tty:
@@ -437,6 +474,7 @@ def emerge_keepwork(
         verbose=verbose,
         verbose_inf=verbose_inf,
     )
+    assert "/" in package
 
     sh.emerge(
         "--verbose",
@@ -464,6 +502,7 @@ def _install_package(
     force_use: bool,
     upgrade_only: bool,
 ) -> None:
+    assert "/" in package
     tty, verbose = tv(
         ctx=ctx,
         verbose=verbose,
@@ -492,6 +531,7 @@ def _resolve_package(
     verbose_inf: bool,
     dict_input: bool,
 ) -> None:
+    assert "/" in package
     tty, verbose = tv(
         ctx=ctx,
         verbose=verbose,
