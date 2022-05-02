@@ -182,69 +182,81 @@ def generate_ebuild_dependency_line(
     return line
 
 
+def install(
+    *,
+    package: str,
+    verbose: Union[bool, int, float],
+    force: bool = False,
+):
+    install_packages(
+        packages=(package,),
+        force=force,
+        upgrade_only=True,
+        verbose=verbose,
+    )
+
+
 def install_packages(
     packages: Sequence[str],
     *,
+    force: bool,
     verbose: Union[bool, int, float],
-) -> None:
-    # if verbose:
-    #    logging.basicConfig(level=logging.INFO)
-
-    emerge_command = sh.emerge.bake(
-        "--with-bdeps=y",
-        "-v",
-        "--tree",
-        "--usepkg=n",
-        "-u",
-        "--ask",
-        "n",
-        "--noreplace",
-    )
-    for package in packages:
-        ic(package)
-        emerge_command = emerge_command.bake(package)
-
-    ic(package)
-    emerge_command("-p", _out=sys.stdout, _err=sys.stderr)
-    emerge_command(_out=sys.stdout, _err=sys.stderr)
-
-
-def install_packages_force(
-    packages: Sequence[str],
-    *,
     upgrade_only: bool = False,
-    verbose: Union[bool, int, float],
 ) -> None:
 
     if verbose:
         logging.basicConfig(level=logging.INFO)
-    _env = os.environ.copy()
-    _env["CONFIG_PROTECT"] = "-*"
-
-    if verbose:
         ic(packages, upgrade_only)
 
-    emerge_command = sh.emerge.bake(
-        "-v",
-        "--with-bdeps=y",
-        "--tree",
-        "--usepkg=n",
-        "--ask",
-        "n",
-        "--autounmask",
-        "--autounmask-write",
-    )
+    if force:
+        _env = os.environ.copy()
+        _env["CONFIG_PROTECT"] = "-*"
 
-    if upgrade_only:
-        emerge_command = emerge_command.bake("-u")
+        emerge_command = sh.emerge.bake(
+            "-v",
+            "--with-bdeps=y",
+            "--tree",
+            "--usepkg=n",
+            "--ask",
+            "n",
+            "--autounmask",
+            "--autounmask-write",
+        )
 
-    for package in packages:
-        emerge_command = emerge_command.bake(package)
+        if upgrade_only:
+            emerge_command = emerge_command.bake("-u")
 
-    emerge_command("-p", _ok_code=[0, 1], _env=_env, _out=sys.stdout, _err=sys.stderr)
-    emerge_command(
-        "--quiet", "--autounmask-continue", _env=_env, _out=sys.stdout, _err=sys.stderr
-    )
+        for package in packages:
+            emerge_command = emerge_command.bake(package)
+
+        emerge_command(
+            "-p", _ok_code=[0, 1], _env=_env, _out=sys.stdout, _err=sys.stderr
+        )
+        emerge_command(
+            "--quiet",
+            "--autounmask-continue",
+            _env=_env,
+            _out=sys.stdout,
+            _err=sys.stderr,
+        )
+    else:
+        emerge_command = sh.emerge.bake(
+            "--with-bdeps=y",
+            "-v",
+            "--tree",
+            "--usepkg=n",
+            "-u",
+            "--ask",
+            "n",
+            "--noreplace",
+        )
+        for package in packages:
+            ic(package)
+            emerge_command = emerge_command.bake(package)
+
+        ic(package)
+        emerge_command("-p", _out=sys.stdout, _err=sys.stderr)
+        emerge_command(_out=sys.stdout, _err=sys.stderr)
 
 
 def add_accept_keyword(
@@ -519,7 +531,7 @@ def emerge_keepwork(
 
 @cli.command("install")
 @click.argument("package", type=str, nargs=1)
-@click.option("--force-use", is_flag=True)
+@click.option("--force", is_flag=True)
 @click.option("--upgrade-only", is_flag=True)
 @click_add_options(click_global_options)
 @click.pass_context
@@ -529,26 +541,24 @@ def _install_package(
     verbose: Union[bool, int, float],
     verbose_inf: bool,
     dict_input: bool,
-    force_use: bool,
+    force: bool,
     upgrade_only: bool,
 ) -> None:
     if not package.startswith("@"):
         assert "/" in package
+
     tty, verbose = tv(
         ctx=ctx,
         verbose=verbose,
         verbose_inf=verbose_inf,
     )
 
-    if force_use:
-        install_packages_force(
-            packages=(package,), verbose=verbose, upgrade_only=upgrade_only
-        )
-    else:
-        install_packages(
-            packages=(package,),
-            verbose=verbose,
-        )
+    install_packages(
+        packages=(package,),
+        force=force,
+        upgrade_only=upgrade_only,
+        verbose=verbose,
+    )
 
 
 @cli.command("resolve")
