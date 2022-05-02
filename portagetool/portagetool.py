@@ -183,9 +183,9 @@ def generate_ebuild_dependency_line(
 
 
 def install(
-    *,
     package: str,
-    verbose: Union[bool, int, float],
+    *,
+    verbose: Union[bool, int, float] = False,
     force: bool = False,
 ):
     install_packages(
