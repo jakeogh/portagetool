@@ -297,7 +297,8 @@ def use_flags_for_package(
         verbose_inf=verbose_inf,
     )
 
-    assert "/" in package
+    if not package.startswith("@"):
+        assert "/" in package
     flags = get_use_flags_for_package(
         package=package,
         verbose=verbose,
@@ -336,7 +337,8 @@ def set_use_flag_for_package(
         verbose=verbose,
     )
 
-    assert "/" in package
+    if not package.startswith("@"):
+        assert "/" in package
     raw_flag = flag
     if flag.startswith("-"):
         raw_flag = flag[1:]
@@ -363,7 +365,8 @@ def generate_patched_package_source(
         verbose_inf=verbose_inf,
     )
 
-    assert "/" in package
+    if not package.startswith("@"):
+        assert "/" in package
     sh_oet = {"_out": sys.stdout, "_err": sys.stderr, "_tee": True}
 
     package = Path(
@@ -434,7 +437,8 @@ def files_provided_by_package(
     qlist_command = sh.Command("qlist")
     qlist_command = qlist_command.bake("--exact", package)
 
-    assert "/" in package
+    if not package.startswith("@"):
+        assert "/" in package
     _tty_out = {}
     _oe = {}
     if not tty:
@@ -474,7 +478,8 @@ def emerge_keepwork(
         verbose=verbose,
         verbose_inf=verbose_inf,
     )
-    assert "/" in package
+    if not package.startswith("@"):
+        assert "/" in package
 
     sh.emerge(
         "--verbose",
@@ -502,7 +507,8 @@ def _install_package(
     force_use: bool,
     upgrade_only: bool,
 ) -> None:
-    assert "/" in package
+    if not package.startswith("@"):
+        assert "/" in package
     tty, verbose = tv(
         ctx=ctx,
         verbose=verbose,
@@ -531,7 +537,8 @@ def _resolve_package(
     verbose_inf: bool,
     dict_input: bool,
 ) -> None:
-    assert "/" in package
+    if not package.startswith("@"):
+        assert "/" in package
     tty, verbose = tv(
         ctx=ctx,
         verbose=verbose,
