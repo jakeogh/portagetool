@@ -61,7 +61,7 @@ def portage_categories():
         / Path("profiles")
         / Path("categories")
     )
-    with open(categories_path, "r") as fh:
+    with open(categories_path, "r", encoding="utf8") as fh:
         lines = fh.readlines()
     categories = [c.strip() for c in lines]
     categories.append("dev-zig")
@@ -277,6 +277,31 @@ def cli(
         ctx=ctx,
         verbose=verbose,
         verbose_inf=verbose_inf,
+    )
+
+
+@cli.command("get-latest-postgresql-version")
+@click_add_options(click_global_options)
+@click.pass_context
+def _get_latest_postgresql_version(
+    ctx,
+    verbose: Union[bool, int, float],
+    verbose_inf: bool,
+    dict_input: bool,
+) -> None:
+    tty, verbose = tv(
+        ctx=ctx,
+        verbose=verbose,
+        verbose_inf=verbose_inf,
+    )
+
+    latest = get_latest_postgresql_version(verbose=verbose)
+    output(
+        latest,
+        reason=None,
+        dict_input=dict_input,
+        tty=tty,
+        verbose=verbose,
     )
 
 
