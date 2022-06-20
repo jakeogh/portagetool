@@ -99,7 +99,7 @@ def get_use_flags_for_package(
     return result
 
 
-## broken, equery check > bla fails
+# broken, equery check > bla fails
 # def resolve_and_check_package_name(package: str,
 #                                   *,
 #                                   verbose: Union[bool, int, float],
