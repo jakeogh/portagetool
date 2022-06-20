@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf8 -*-
 
-# flake8: noqa           # flake8 has no per file settings :(
 # pylint: disable=C0111  # docstrings are always outdated and wrong
-# pylint: disable=C0114  #      Missing module docstring (missing-module-docstring)
+# pylint: disable=C0114  # Missing module docstring (missing-module-docstring)
 # pylint: disable=W0511  # todo is encouraged
 # pylint: disable=C0301  # line too long
 # pylint: disable=R0902  # too many instance attributes
@@ -19,7 +18,7 @@
 # pylint: disable=E1101  # no member for base
 # pylint: disable=W0201  # attribute defined outside __init__
 # pylint: disable=R0916  # Too many boolean expressions in if statement
-# pylint: disable=C0305  # Trailing newlines editor should fix automatically, pointless warning
+
 
 import glob
 import logging
@@ -30,21 +29,15 @@ from pathlib import Path
 from signal import SIG_DFL
 from signal import SIGPIPE
 from signal import signal
-# from typing import Tuple
-# from typing import List
-from typing import Optional
 from typing import Sequence
 from typing import Union
 
 import click
 import sh
-# from eprint import eprint
 from asserttool import ic
-# from asserttool import validate_slice
 from clicktool import click_add_options
 from clicktool import click_global_options
 from clicktool import tv
-# from mptool import unmp
 from mathtool import sort_versions
 from mptool import output
 from pathtool import write_line_to_file
@@ -250,13 +243,15 @@ def install_packages(
             "n",
             "--noreplace",
         )
+        package = None
         for package in packages:
             ic(package)
             emerge_command = emerge_command.bake(package)
 
-        ic(package)
-        emerge_command("-p", _out=sys.stdout, _err=sys.stderr)
-        emerge_command(_out=sys.stdout, _err=sys.stderr)
+        if package:
+            ic(package)
+            emerge_command("-p", _out=sys.stdout, _err=sys.stderr)
+            emerge_command(_out=sys.stdout, _err=sys.stderr)
 
 
 def add_accept_keyword(
@@ -328,6 +323,7 @@ def use_flags_for_package(
     verbose_inf: bool,
     dict_input: bool,
 ) -> None:
+
     tty, verbose = tv(
         ctx=ctx,
         verbose=verbose,
@@ -363,6 +359,7 @@ def set_use_flag_for_package(
     verbose_inf: bool,
     dict_input: bool,
 ) -> None:
+
     tty, verbose = tv(
         ctx=ctx,
         verbose=verbose,
