@@ -1,40 +1,40 @@
 #!/usr/bin/env python3
 # -*- coding: utf8 -*-
 
-# pylint: disable=C0111  # docstrings are always outdated and wrong
-# pylint: disable=C0114  # Missing module docstring (missing-module-docstring)
-# pylint: disable=W0511  # todo is encouraged
-# pylint: disable=C0301  # line too long
-# pylint: disable=R0902  # too many instance attributes
-# pylint: disable=C0302  # too many lines in module
-# pylint: disable=C0103  # single letter var names, func name too descriptive
-# pylint: disable=R0911  # too many return statements
-# pylint: disable=R0912  # too many branches
-# pylint: disable=R0915  # too many statements
-# pylint: disable=R0913  # too many arguments
-# pylint: disable=R1702  # too many nested blocks
-# pylint: disable=R0914  # too many local variables
-# pylint: disable=R0903  # too few public methods
-# pylint: disable=E1101  # no member for base
-# pylint: disable=W0201  # attribute defined outside __init__
-# pylint: disable=R0916  # Too many boolean expressions in if statement
-
+# pylint: disable=missing-docstring               # [C0111] docstrings are always outdated and wrong
+# pylint: disable=missing-module-docstring        # [C0114]
+# pylint: disable=fixme                           # [W0511] todo is encouraged
+# pylint: disable=line-too-long                   # [C0301]
+# pylint: disable=too-many-instance-attributes    # [R0902]
+# pylint: disable=too-many-lines                  # [C0302] too many lines in module
+# pylint: disable=invalid-name                    # [C0103] single letter var names, name too descriptive
+# pylint: disable=too-many-return-statements      # [R0911]
+# pylint: disable=too-many-branches               # [R0912]
+# pylint: disable=too-many-statements             # [R0915]
+# pylint: disable=too-many-arguments              # [R0913]
+# pylint: disable=too-many-nested-blocks          # [R1702]
+# pylint: disable=too-many-locals                 # [R0914]
+# pylint: disable=too-few-public-methods          # [R0903]
+# pylint: disable=no-member                       # [E1101] no member for base
+# pylint: disable=attribute-defined-outside-init  # [W0201]
+# pylint: disable=too-many-boolean-expressions    # [R0916] in if statement
+from __future__ import annotations
 
 import glob
 import logging
 import os
 import sys
+from collections.abc import Sequence
 from math import inf
 from pathlib import Path
 from signal import SIG_DFL
 from signal import SIGPIPE
 from signal import signal
-from typing import Sequence
-from typing import Union
 
 import click
 import sh
 from asserttool import ic
+from click_auto_help import AHGroup
 from clicktool import click_add_options
 from clicktool import click_global_options
 from clicktool import tv
@@ -64,7 +64,7 @@ def portage_categories():
 
 
 def get_latest_postgresql_version(
-    verbose: Union[bool, int, float],
+    verbose: bool | int | float,
 ):
     glob_pattern = "/etc/init.d/postgresql-*"
     if verbose:
@@ -87,7 +87,7 @@ def get_latest_postgresql_version(
 def get_use_flags_for_package(
     package: str,
     *,
-    verbose: Union[bool, int, float],
+    verbose: bool | int | float,
 ):
 
     result = sh.cat(sh.equery("uses", package, _piped=True))
@@ -102,7 +102,7 @@ def get_use_flags_for_package(
 # broken, equery check > bla fails
 # def resolve_and_check_package_name(package: str,
 #                                   *,
-#                                   verbose: Union[bool, int, float],
+#                                   verbose: bool | int | float,
 #                                   ):
 #
 #    #result = sh.cat(sh.equery('check', package, _piped=True))
@@ -118,7 +118,7 @@ def get_use_flags_for_package(
 def resolve_package_name(
     package: str,
     *,
-    verbose: Union[bool, int, float],
+    verbose: bool | int | float,
 ) -> str:
 
     # result = sh.cat(sh.equery('check', package, _piped=True))
@@ -137,7 +137,7 @@ def resolve_package_name(
 def get_python_dependency(
     package: str,
     *,
-    verbose: Union[bool, int, float],
+    verbose: bool | int | float,
 ) -> bool:
 
     result = sh.equery(
@@ -157,7 +157,7 @@ def get_python_dependency(
 def generate_ebuild_dependency_line(
     package: str,
     *,
-    verbose: Union[bool, int, float],
+    verbose: bool | int | float,
 ):
     package = resolve_package_name(
         package,
@@ -178,7 +178,7 @@ def generate_ebuild_dependency_line(
 def install(
     package: str,
     *,
-    verbose: Union[bool, int, float] = False,
+    verbose: bool | int | float = False,
     force: bool = False,
 ):
     install_packages(
@@ -193,7 +193,7 @@ def install_packages(
     packages: Sequence[str],
     *,
     force: bool,
-    verbose: Union[bool, int, float],
+    verbose: bool | int | float,
     upgrade_only: bool = False,
 ) -> None:
 
@@ -257,7 +257,7 @@ def install_packages(
 def add_accept_keyword(
     package: str,
     *,
-    verbose: Union[bool, int, float],
+    verbose: bool | int | float,
 ) -> None:
 
     line = f"={package} **"
@@ -271,14 +271,14 @@ def add_accept_keyword(
     )
 
 
-@click.group(no_args_is_help=True)
+@click.group(no_args_is_help=True, cls=AHGroup)
 @click_add_options(click_global_options)
 @click.pass_context
 def cli(
     ctx,
-    verbose: Union[bool, int, float],
+    verbose: bool | int | float,
     verbose_inf: bool,
-    dict_input: bool,
+    dict_output: bool,
 ) -> None:
     tty, verbose = tv(
         ctx=ctx,
@@ -292,9 +292,9 @@ def cli(
 @click.pass_context
 def _get_latest_postgresql_version(
     ctx,
-    verbose: Union[bool, int, float],
+    verbose: bool | int | float,
     verbose_inf: bool,
-    dict_input: bool,
+    dict_output: bool,
 ) -> None:
     tty, verbose = tv(
         ctx=ctx,
@@ -306,7 +306,7 @@ def _get_latest_postgresql_version(
     output(
         latest,
         reason=None,
-        dict_input=dict_input,
+        dict_output=dict_output,
         tty=tty,
         verbose=verbose,
     )
@@ -319,9 +319,9 @@ def _get_latest_postgresql_version(
 def use_flags_for_package(
     ctx,
     package: str,
-    verbose: Union[bool, int, float],
+    verbose: bool | int | float,
     verbose_inf: bool,
-    dict_input: bool,
+    dict_output: bool,
 ) -> None:
 
     tty, verbose = tv(
@@ -340,7 +340,7 @@ def use_flags_for_package(
         output(
             flag.encode("utf8"),  # hm.
             reason=package,
-            dict_input=dict_input,
+            dict_output=dict_output,
             tty=tty,
             verbose=verbose,
         )
@@ -355,9 +355,9 @@ def set_use_flag_for_package(
     ctx,
     package: str,
     flag: str,
-    verbose: Union[bool, int, float],
+    verbose: bool | int | float,
     verbose_inf: bool,
-    dict_input: bool,
+    dict_output: bool,
 ) -> None:
 
     tty, verbose = tv(
@@ -389,9 +389,9 @@ def set_use_flag_for_package(
 def generate_patched_package_source(
     ctx,
     package: str,
-    verbose: Union[bool, int, float],
+    verbose: bool | int | float,
     verbose_inf: bool,
-    dict_input: bool,
+    dict_output: bool,
 ) -> None:
     tty, verbose = tv(
         ctx=ctx,
@@ -458,9 +458,9 @@ def generate_patched_package_source(
 def files_provided_by_package(
     ctx,
     package: str,
-    verbose: Union[bool, int, float],
+    verbose: bool | int | float,
     verbose_inf: bool,
-    dict_input: bool,
+    dict_output: bool,
 ) -> None:
     tty, verbose = tv(
         ctx=ctx,
@@ -493,7 +493,7 @@ def files_provided_by_package(
             verbose == inf
         ):  # `verbose: int >= math inf` debug protocol works  #inf has always been a float... all `verbose: int` type annotations are wrong
             ic(line)
-        output(line, reason=None, dict_input=dict_input, tty=tty, verbose=verbose)
+        output(line, reason=None, dict_output=dict_output, tty=tty, verbose=verbose)
 
 
 @click.command()
@@ -503,9 +503,9 @@ def files_provided_by_package(
 def emerge_keepwork(
     ctx,
     package: str,
-    verbose: Union[bool, int, float],
+    verbose: bool | int | float,
     verbose_inf: bool,
-    dict_input: bool,
+    dict_output: bool,
 ) -> None:
     tty, verbose = tv(
         ctx=ctx,
@@ -535,9 +535,9 @@ def emerge_keepwork(
 def _install_package(
     ctx,
     package: str,
-    verbose: Union[bool, int, float],
+    verbose: bool | int | float,
     verbose_inf: bool,
-    dict_input: bool,
+    dict_output: bool,
     force: bool,
     upgrade_only: bool,
 ) -> None:
@@ -565,9 +565,9 @@ def _install_package(
 def _resolve_package(
     ctx,
     package: str,
-    verbose: Union[bool, int, float],
+    verbose: bool | int | float,
     verbose_inf: bool,
-    dict_input: bool,
+    dict_output: bool,
 ) -> None:
     if not package.startswith("@"):
         assert "/" in package
@@ -581,4 +581,4 @@ def _resolve_package(
         package=package,
         verbose=verbose,
     )
-    output(result, reason=package, dict_input=dict_input, tty=tty, verbose=verbose)
+    output(result, reason=package, dict_output=dict_output, tty=tty, verbose=verbose)
