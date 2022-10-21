@@ -48,6 +48,12 @@ from pathtool import write_line_to_file
 signal(SIGPIPE, SIG_DFL)
 
 
+def pkg_installed(pkg):
+    _c = sh.Command("qlist")
+    _c = _c.bake("-ICve", pkg)
+    _c()
+
+
 def portage_categories():
     categories_path = (
         Path(str(sh.portageq("get_repo_path", "/", "gentoo").strip()))
