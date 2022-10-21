@@ -48,7 +48,7 @@ from pathtool import write_line_to_file
 signal(SIGPIPE, SIG_DFL)
 
 
-def pkg_installed(pkg):
+def package_atom_installed(pkg):
     _c = sh.Command("qlist")
     _c = _c.bake("-ICve", pkg)
     _c()
