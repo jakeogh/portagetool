@@ -52,6 +52,7 @@ def pkg_installed(pkg):
     _c = sh.Command("qlist")
     _c = _c.bake("-ICve", pkg)
     _c()
+    # raises exception of >0
 
 
 def portage_categories():
