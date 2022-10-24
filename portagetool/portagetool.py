@@ -51,8 +51,11 @@ signal(SIGPIPE, SIG_DFL)
 def package_atom_installed(pkg):
     _c = sh.Command("qlist")
     _c = _c.bake("-ICve", pkg)
-    _c()
-    # raises exception of >0
+    try:
+        _c()
+    except sh.ErrorReturnCode_1:
+        return False
+    return True
 
 
 def portage_categories():
