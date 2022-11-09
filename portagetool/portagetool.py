@@ -264,6 +264,24 @@ def install_packages(
             emerge_command(_out=sys.stdout, _err=sys.stderr)
 
 
+def mask_package(
+    package: str,
+    *,
+    verbose: bool | int | float,
+) -> None:
+
+    line = f"{package}"
+    _pkg = package.split("/")[-1]
+    if verbose:
+        ic(line)
+    write_line_to_file(
+        path=Path(f"/etc/portage/package.mask/{_pkg}"),
+        line=line + "\n",
+        unique=True,
+        verbose=verbose,
+    )
+
+
 def add_accept_keyword(
     package: str,
     *,
@@ -290,6 +308,7 @@ def cli(
     verbose_inf: bool,
     dict_output: bool,
 ) -> None:
+
     tty, verbose = tv(
         ctx=ctx,
         verbose=verbose,
@@ -306,6 +325,7 @@ def _get_latest_postgresql_version(
     verbose_inf: bool,
     dict_output: bool,
 ) -> None:
+
     tty, verbose = tv(
         ctx=ctx,
         verbose=verbose,
@@ -320,6 +340,30 @@ def _get_latest_postgresql_version(
         tty=tty,
         verbose=verbose,
     )
+
+
+@cli.command("mask-package")
+@click.argument("package", type=str, nargs=1)
+@click_add_options(click_global_options)
+@click.pass_context
+def _mask_package(
+    ctx,
+    package: str,
+    verbose: bool | int | float,
+    verbose_inf: bool,
+    dict_output: bool,
+) -> None:
+
+    tty, verbose = tv(
+        ctx=ctx,
+        verbose=verbose,
+        verbose_inf=verbose_inf,
+    )
+
+    if not package.startswith("@"):
+        assert "/" in package
+
+    mask_package(package=package, verbose=verbose)
 
 
 @cli.command()
@@ -403,6 +447,7 @@ def generate_patched_package_source(
     verbose_inf: bool,
     dict_output: bool,
 ) -> None:
+
     tty, verbose = tv(
         ctx=ctx,
         verbose=verbose,
@@ -472,6 +517,7 @@ def files_provided_by_package(
     verbose_inf: bool,
     dict_output: bool,
 ) -> None:
+
     tty, verbose = tv(
         ctx=ctx,
         verbose=verbose,
@@ -517,6 +563,7 @@ def emerge_keepwork(
     verbose_inf: bool,
     dict_output: bool,
 ) -> None:
+
     tty, verbose = tv(
         ctx=ctx,
         verbose=verbose,
