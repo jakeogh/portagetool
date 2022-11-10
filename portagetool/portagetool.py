@@ -289,14 +289,23 @@ def add_accept_keyword(
 ) -> None:
 
     line = f"={package} **"
+    _pkg = package.split("/")[-1]
     if verbose:
         ic(line)
-    write_line_to_file(
-        path=Path("/etc/portage/package.accept_keywords"),
-        line=line + "\n",
-        unique=True,
-        verbose=verbose,
-    )
+    try:
+        write_line_to_file(
+            path=Path("/etc/portage/package.accept_keywords"),
+            line=line + "\n",
+            unique=True,
+            verbose=verbose,
+        )
+    except IsADirectoryError:
+        write_line_to_file(
+            path=Path("/etc/portage/package.accept_keywords") / Path(_pkg),
+            line=line + "\n",
+            unique=True,
+            verbose=verbose,
+        )
 
 
 @click.group(no_args_is_help=True, cls=AHGroup)
