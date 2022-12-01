@@ -190,11 +190,13 @@ def install(
     *,
     verbose: bool | int | float = False,
     force: bool = False,
+    nice: bool = False,
 ):
     install_packages(
         packages=(package,),
         force=force,
         upgrade_only=True,
+        nice=nice,
         verbose=verbose,
     )
 
@@ -205,6 +207,7 @@ def install_packages(
     force: bool,
     verbose: bool | int | float,
     upgrade_only: bool = False,
+    nice: bool = False,
 ) -> None:
 
     if verbose:
@@ -214,6 +217,10 @@ def install_packages(
     if force:
         _env = os.environ.copy()
         _env["CONFIG_PROTECT"] = "-*"
+
+    if not nice:
+        _env["PORTAGE_NICENESS"] = "-2"
+        _env["PORTAGE_IONICE_COMMAND"] = ""
 
         emerge_command = sh.emerge.bake(
             "-v",
@@ -595,6 +602,7 @@ def emerge_keepwork(
 @cli.command("install")
 @click.argument("package", type=str, nargs=1)
 @click.option("--force", is_flag=True)
+@click.option("--nice", is_flag=True)
 @click.option("--upgrade-only", is_flag=True)
 @click_add_options(click_global_options)
 @click.pass_context
@@ -605,6 +613,7 @@ def _install_package(
     verbose_inf: bool,
     dict_output: bool,
     force: bool,
+    nice: bool,
     upgrade_only: bool,
 ) -> None:
     if not package.startswith("@"):
@@ -619,6 +628,7 @@ def _install_package(
     install_packages(
         packages=(package,),
         force=force,
+        nice=nice,
         upgrade_only=upgrade_only,
         verbose=verbose,
     )

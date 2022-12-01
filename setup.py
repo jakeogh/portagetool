@@ -22,6 +22,7 @@ config = {
     "zip_safe": False,
     "platforms": "any",
     "install_requires": dependencies,
+    "scripts": "portagetool/io-niceness.sh",
     "entry_points": {
         "console_scripts": [
             "portagetool=portagetool.portagetool:cli",
