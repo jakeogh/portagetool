@@ -225,6 +225,7 @@ def install_packages(
     if not nice:
         _env["PORTAGE_NICENESS"] = "-2"
         _env["PORTAGE_IONICE_COMMAND"] = ""
+        _env["PORTAGE_SCHEDULING_POLICY"] = "other"
 
     if force:
         _env["CONFIG_PROTECT"] = "-*"
@@ -248,7 +249,6 @@ def install_packages(
 
         if upgrade_only:
             emerge_command = emerge_command.bake("-u")
-
 
         package = None
         for package in packages:
