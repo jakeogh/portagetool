@@ -263,7 +263,6 @@ def install_packages(
             "-v",
             "--tree",
             "--usepkg=n",
-            "-u",
             "--ask",
             "n",
             "--noreplace",
@@ -271,6 +270,9 @@ def install_packages(
 
         if oneshot:
             emerge_command = emerge_command.bake("--oneshot")
+
+        if upgrade_only:
+            emerge_command = emerge_command.bake("-u")
 
         package = None
         for package in packages:
