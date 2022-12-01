@@ -192,6 +192,7 @@ def install(
     force: bool = False,
     nice: bool = False,
     oneshot: bool = False,
+    noreplace: bool = False,
 ):
     install_packages(
         packages=(package,),
@@ -199,6 +200,7 @@ def install(
         upgrade_only=True,
         nice=nice,
         oneshot=oneshot,
+        noreplace=noreplace,
         verbose=verbose,
     )
 
@@ -211,6 +213,7 @@ def install_packages(
     upgrade_only: bool = False,
     nice: bool = False,
     oneshot: bool = False,
+    noreplace: bool = False,
 ) -> None:
 
     if verbose:
@@ -237,11 +240,15 @@ def install_packages(
             "--autounmask-write",
         )
 
-        if upgrade_only:
-            emerge_command = emerge_command.bake("-u")
+        if noreplace:
+            emerge_command = emerge_command.bake("--noreplace")
 
         if oneshot:
             emerge_command = emerge_command.bake("--oneshot")
+
+        if upgrade_only:
+            emerge_command = emerge_command.bake("-u")
+
 
         package = None
         for package in packages:
@@ -265,8 +272,10 @@ def install_packages(
             "--usepkg=n",
             "--ask",
             "n",
-            "--noreplace",
         )
+
+        if noreplace:
+            emerge_command = emerge_command.bake("--noreplace")
 
         if oneshot:
             emerge_command = emerge_command.bake("--oneshot")
@@ -618,6 +627,7 @@ def emerge_keepwork(
 @click.option("--force", is_flag=True)
 @click.option("--nice", is_flag=True)
 @click.option("--oneshot", is_flag=True)
+@click.option("--noreplace", is_flag=True)
 @click.option("--upgrade-only", is_flag=True)
 @click_add_options(click_global_options)
 @click.pass_context
@@ -628,6 +638,7 @@ def _install_package(
     verbose_inf: bool,
     dict_output: bool,
     force: bool,
+    noreplace: bool,
     nice: bool,
     oneshot: bool,
     upgrade_only: bool,
@@ -647,6 +658,7 @@ def _install_package(
         nice=nice,
         oneshot=oneshot,
         upgrade_only=upgrade_only,
+        noreplace=noreplace,
         verbose=verbose,
     )
 
