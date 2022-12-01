@@ -191,36 +191,40 @@ def install(
     verbose: bool | int | float = False,
     force: bool = False,
     nice: bool = False,
+    oneshot: bool = False,
 ):
     install_packages(
         packages=(package,),
         force=force,
         upgrade_only=True,
         nice=nice,
+        oneshot=oneshot,
         verbose=verbose,
     )
 
 
 def install_packages(
-    packages: Sequence[str],
+    packages: tuple[str, ...],
     *,
     force: bool,
     verbose: bool | int | float,
     upgrade_only: bool = False,
     nice: bool = False,
+    oneshot: bool = False,
 ) -> None:
 
     if verbose:
         logging.basicConfig(level=logging.INFO)
         ic(packages, upgrade_only)
 
-    if force:
-        _env = os.environ.copy()
-        _env["CONFIG_PROTECT"] = "-*"
+    _env = os.environ.copy()
 
     if not nice:
         _env["PORTAGE_NICENESS"] = "-2"
         _env["PORTAGE_IONICE_COMMAND"] = ""
+
+    if force:
+        _env["CONFIG_PROTECT"] = "-*"
 
         emerge_command = sh.emerge.bake(
             "-v",
@@ -236,6 +240,10 @@ def install_packages(
         if upgrade_only:
             emerge_command = emerge_command.bake("-u")
 
+        if oneshot:
+            emerge_command = emerge_command.bake("--oneshot")
+
+        package = None
         for package in packages:
             emerge_command = emerge_command.bake(package)
 
@@ -260,6 +268,10 @@ def install_packages(
             "n",
             "--noreplace",
         )
+
+        if oneshot:
+            emerge_command = emerge_command.bake("--oneshot")
+
         package = None
         for package in packages:
             ic(package)
@@ -603,6 +615,7 @@ def emerge_keepwork(
 @click.argument("package", type=str, nargs=1)
 @click.option("--force", is_flag=True)
 @click.option("--nice", is_flag=True)
+@click.option("--oneshot", is_flag=True)
 @click.option("--upgrade-only", is_flag=True)
 @click_add_options(click_global_options)
 @click.pass_context
@@ -614,6 +627,7 @@ def _install_package(
     dict_output: bool,
     force: bool,
     nice: bool,
+    oneshot: bool,
     upgrade_only: bool,
 ) -> None:
     if not package.startswith("@"):
@@ -629,6 +643,7 @@ def _install_package(
         packages=(package,),
         force=force,
         nice=nice,
+        oneshot=oneshot,
         upgrade_only=upgrade_only,
         verbose=verbose,
     )
