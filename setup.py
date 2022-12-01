@@ -14,7 +14,7 @@ config = {
     "license": "ISC",
     "author": "Justin Keogh",
     "author_email": "github.com@v6y.net",
-    "description": "Short explination of what it does _here_",
+    "description": "Common functions for portage",
     "long_description": __doc__,
     "packages": find_packages(exclude=["tests"]),
     "package_data": {"portagetool": ["py.typed"]},
@@ -22,7 +22,7 @@ config = {
     "zip_safe": False,
     "platforms": "any",
     "install_requires": dependencies,
-    "scripts": "portagetool/io-niceness.sh",
+    "scripts": ["io-niceness.sh"],
     "entry_points": {
         "console_scripts": [
             "portagetool=portagetool.portagetool:cli",
