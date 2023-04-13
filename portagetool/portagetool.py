@@ -74,7 +74,7 @@ def portage_categories():
 
 
 def get_latest_postgresql_version(
-    verbose: bool | int | float,
+    verbose: bool | int | float = False,
 ):
     glob_pattern = "/etc/init.d/postgresql-*"
     if verbose:
@@ -97,9 +97,8 @@ def get_latest_postgresql_version(
 def get_use_flags_for_package(
     package: str,
     *,
-    verbose: bool | int | float,
+    verbose: bool | int | float = False,
 ):
-
     result = sh.cat(sh.equery("uses", package, _piped=True))
     result = result.strip()
     if verbose:
@@ -112,7 +111,7 @@ def get_use_flags_for_package(
 # broken, equery check > bla fails
 # def resolve_and_check_package_name(package: str,
 #                                   *,
-#                                   verbose: bool | int | float,
+#                                   verbose: bool | int | float = False,
 #                                   ):
 #
 #    #result = sh.cat(sh.equery('check', package, _piped=True))
@@ -128,9 +127,8 @@ def get_use_flags_for_package(
 def resolve_package_name(
     package: str,
     *,
-    verbose: bool | int | float,
+    verbose: bool | int | float = False,
 ) -> str:
-
     # result = sh.cat(sh.equery('check', package, _piped=True))
     result = sh.equery(
         "--quiet",
@@ -147,9 +145,8 @@ def resolve_package_name(
 def get_python_dependency(
     package: str,
     *,
-    verbose: bool | int | float,
+    verbose: bool | int | float = False,
 ) -> bool:
-
     result = sh.equery(
         "--quiet",
         "uses",
@@ -167,7 +164,7 @@ def get_python_dependency(
 def generate_ebuild_dependency_line(
     package: str,
     *,
-    verbose: bool | int | float,
+    verbose: bool | int | float = False,
 ):
     package = resolve_package_name(
         package,
@@ -188,11 +185,11 @@ def generate_ebuild_dependency_line(
 def install(
     package: str,
     *,
-    verbose: bool | int | float = False,
     force: bool = False,
     nice: bool = False,
     oneshot: bool = False,
     noreplace: bool = False,
+    verbose: bool | int | float = False,
 ):
     install_packages(
         packages=(package,),
@@ -206,16 +203,15 @@ def install(
 
 
 def install_packages(
-    packages: tuple[str, ...],
+    packages: tuple[str, ...] | list[str],
     *,
     force: bool,
-    verbose: bool | int | float,
     upgrade_only: bool = False,
     nice: bool = False,
     oneshot: bool = False,
     noreplace: bool = False,
+    verbose: bool | int | float = False,
 ) -> None:
-
     if verbose:
         logging.basicConfig(level=logging.INFO)
         ic(packages, upgrade_only)
@@ -297,9 +293,8 @@ def install_packages(
 def mask_package(
     package: str,
     *,
-    verbose: bool | int | float,
+    verbose: bool | int | float = False,
 ) -> None:
-
     line = f"{package}"
     _pkg = package.split("/")[-1]
     if verbose:
@@ -315,9 +310,8 @@ def mask_package(
 def add_accept_keyword(
     package: str,
     *,
-    verbose: bool | int | float,
+    verbose: bool | int | float = False,
 ) -> None:
-
     line = f"={package} **"
     _pkg = package.split("/")[-1]
     if verbose:
@@ -343,11 +337,10 @@ def add_accept_keyword(
 @click.pass_context
 def cli(
     ctx,
-    verbose: bool | int | float,
     verbose_inf: bool,
     dict_output: bool,
+    verbose: bool | int | float = False,
 ) -> None:
-
     tty, verbose = tv(
         ctx=ctx,
         verbose=verbose,
@@ -360,11 +353,10 @@ def cli(
 @click.pass_context
 def _get_latest_postgresql_version(
     ctx,
-    verbose: bool | int | float,
     verbose_inf: bool,
     dict_output: bool,
+    verbose: bool | int | float = False,
 ) -> None:
-
     tty, verbose = tv(
         ctx=ctx,
         verbose=verbose,
@@ -388,11 +380,10 @@ def _get_latest_postgresql_version(
 def _mask_package(
     ctx,
     package: str,
-    verbose: bool | int | float,
     verbose_inf: bool,
     dict_output: bool,
+    verbose: bool | int | float = False,
 ) -> None:
-
     tty, verbose = tv(
         ctx=ctx,
         verbose=verbose,
@@ -412,11 +403,10 @@ def _mask_package(
 def use_flags_for_package(
     ctx,
     package: str,
-    verbose: bool | int | float,
     verbose_inf: bool,
     dict_output: bool,
+    verbose: bool | int | float = False,
 ) -> None:
-
     tty, verbose = tv(
         ctx=ctx,
         verbose=verbose,
@@ -448,11 +438,10 @@ def set_use_flag_for_package(
     ctx,
     package: str,
     flag: str,
-    verbose: bool | int | float,
     verbose_inf: bool,
     dict_output: bool,
+    verbose: bool | int | float = False,
 ) -> None:
-
     tty, verbose = tv(
         ctx=ctx,
         verbose=verbose,
@@ -482,11 +471,10 @@ def set_use_flag_for_package(
 def generate_patched_package_source(
     ctx,
     package: str,
-    verbose: bool | int | float,
     verbose_inf: bool,
     dict_output: bool,
+    verbose: bool | int | float = False,
 ) -> None:
-
     tty, verbose = tv(
         ctx=ctx,
         verbose=verbose,
@@ -552,11 +540,10 @@ def generate_patched_package_source(
 def files_provided_by_package(
     ctx,
     package: str,
-    verbose: bool | int | float,
     verbose_inf: bool,
     dict_output: bool,
+    verbose: bool | int | float = False,
 ) -> None:
-
     tty, verbose = tv(
         ctx=ctx,
         verbose=verbose,
@@ -598,11 +585,10 @@ def files_provided_by_package(
 def emerge_keepwork(
     ctx,
     package: str,
-    verbose: bool | int | float,
     verbose_inf: bool,
     dict_output: bool,
+    verbose: bool | int | float = False,
 ) -> None:
-
     tty, verbose = tv(
         ctx=ctx,
         verbose=verbose,
@@ -634,7 +620,6 @@ def emerge_keepwork(
 def _install_package(
     ctx,
     package: str,
-    verbose: bool | int | float,
     verbose_inf: bool,
     dict_output: bool,
     force: bool,
@@ -642,6 +627,7 @@ def _install_package(
     nice: bool,
     oneshot: bool,
     upgrade_only: bool,
+    verbose: bool | int | float = False,
 ) -> None:
     if not package.startswith("@"):
         assert "/" in package
@@ -670,9 +656,9 @@ def _install_package(
 def _resolve_package(
     ctx,
     package: str,
-    verbose: bool | int | float,
     verbose_inf: bool,
     dict_output: bool,
+    verbose: bool | int | float = False,
 ) -> None:
     if not package.startswith("@"):
         assert "/" in package
@@ -686,4 +672,10 @@ def _resolve_package(
         package=package,
         verbose=verbose,
     )
-    output(result, reason=package, dict_output=dict_output, tty=tty, verbose=verbose)
+    output(
+        result,
+        reason=package,
+        dict_output=dict_output,
+        tty=tty,
+        verbose=verbose,
+    )
