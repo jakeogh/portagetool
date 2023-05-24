@@ -609,7 +609,7 @@ def emerge_keepwork(
 
 
 @cli.command("install")
-@click.argument("package", type=str, nargs=1)
+@click.argument("packages", type=str, nargs=-1)
 @click.option("--force", is_flag=True)
 @click.option("--nice", is_flag=True)
 @click.option("--oneshot", is_flag=True)
@@ -619,7 +619,7 @@ def emerge_keepwork(
 @click.pass_context
 def _install_package(
     ctx,
-    package: str,
+    packages: tuple[str, ...],
     verbose_inf: bool,
     dict_output: bool,
     force: bool,
@@ -629,24 +629,25 @@ def _install_package(
     upgrade_only: bool,
     verbose: bool | int | float = False,
 ) -> None:
-    if not package.startswith("@"):
-        assert "/" in package
-
     tty, verbose = tv(
         ctx=ctx,
         verbose=verbose,
         verbose_inf=verbose_inf,
     )
 
-    install_packages(
-        packages=(package,),
-        force=force,
-        nice=nice,
-        oneshot=oneshot,
-        upgrade_only=upgrade_only,
-        noreplace=noreplace,
-        verbose=verbose,
-    )
+    for package in packages:
+        if not package.startswith("@"):
+            assert "/" in package
+
+        install_packages(
+            packages=(package,),
+            force=force,
+            nice=nice,
+            oneshot=oneshot,
+            upgrade_only=upgrade_only,
+            noreplace=noreplace,
+            verbose=verbose,
+        )
 
 
 @cli.command("resolve")
