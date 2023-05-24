@@ -639,15 +639,15 @@ def _install_package(
         if not package.startswith("@"):
             assert "/" in package
 
-        install_packages(
-            packages=(package,),
-            force=force,
-            nice=nice,
-            oneshot=oneshot,
-            upgrade_only=upgrade_only,
-            noreplace=noreplace,
-            verbose=verbose,
-        )
+    install_packages(
+        packages=packages,
+        force=force,
+        nice=nice,
+        oneshot=oneshot,
+        upgrade_only=upgrade_only,
+        noreplace=noreplace,
+        verbose=verbose,
+    )
 
 
 @cli.command("resolve")
