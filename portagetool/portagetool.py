@@ -34,6 +34,7 @@ from signal import signal
 import click
 import sh
 from asserttool import ic
+from asserttool import icp
 from click_auto_help import AHGroup
 from clicktool import click_add_options
 from clicktool import click_global_options
@@ -99,10 +100,10 @@ def get_use_flags_for_package(
     *,
     verbose: bool | int | float = False,
 ):
-    result = sh.cat(sh.equery("uses", package, _piped=True))
+    #result = sh.cat(sh.equery("uses", package, _piped=True))
+    result = sh.equery("uses", package, _piped=True)
     result = result.strip()
-    if verbose:
-        ic(result)
+    icp(result)
     result = [r[1:] for r in result.split("\n")]
 
     return result
