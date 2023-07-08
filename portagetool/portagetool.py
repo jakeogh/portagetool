@@ -107,6 +107,7 @@ def get_use_flags_for_package(
     icp(result)
     result = [r[1:] for r in result.split("\n")]
 
+    icp(result)
     return result
 
 
