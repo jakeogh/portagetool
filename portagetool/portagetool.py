@@ -100,14 +100,14 @@ def get_use_flags_for_package(
     *,
     verbose: bool | int | float = False,
 ):
-    #icp(package)
-    #result = sh.cat(sh.equery("uses", package, _piped=True))
+    # icp(package)
+    # result = sh.cat(sh.equery("uses", package, _piped=True))
     result = sh.equery("uses", package, _tty_out=False)
     result = result.strip()
-    #icp(result)
+    # icp(result)
     result = [r[1:] for r in result.split("\n")]
 
-    #icp(result)
+    # icp(result)
     return result
 
 
