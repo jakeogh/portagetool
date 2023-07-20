@@ -24,7 +24,7 @@ import glob
 import logging
 import os
 import sys
-from collections.abc import Sequence
+from collections.abc import Iterator
 from math import inf
 from pathlib import Path
 from signal import SIG_DFL
@@ -203,6 +203,15 @@ def install(
         noreplace=noreplace,
         verbose=verbose,
     )
+
+
+def installed_packages(
+    verbose: bool | int | float = False,
+) -> Iterator[str]:
+    qlist_command = sh.qlist.bake("-IRCv")
+    _results = qlist_command().strip().split("\n")
+    for _result in _results:
+        yield _result
 
 
 def install_packages(
@@ -683,3 +692,29 @@ def _resolve_package(
         tty=tty,
         verbose=verbose,
     )
+
+
+@cli.command("list")
+@click_add_options(click_global_options)
+@click.pass_context
+def _list(
+    ctx,
+    verbose_inf: bool,
+    dict_output: bool,
+    verbose: bool | int | float = False,
+) -> None:
+    tty, verbose = tv(
+        ctx=ctx,
+        verbose=verbose,
+        verbose_inf=verbose_inf,
+    )
+
+    results = installed_packages()
+    for _ in results:
+        output(
+            _,
+            reason=None,
+            dict_output=dict_output,
+            tty=tty,
+            verbose=verbose,
+        )
