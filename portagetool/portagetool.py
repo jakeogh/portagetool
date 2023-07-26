@@ -501,8 +501,8 @@ def generate_patched_package_source(
         sh.equery("-q", "list", package, **sh_oet).stdout.decode("utf8").strip()
     )
     ic(package)
-    package_location_command = sh.equery("-q", "meta", package, **sh_oet)
-    package_location_command_stdout = package_location_command.stdout.splitlines()
+    package_location_command = sh.equery("-q", "meta", package, **sh_oet).strip()
+    package_location_command_stdout = package_location_command.splitlines()
     package_location = None
     for line in package_location_command_stdout:
         if line.startswith(b"Location: "):
@@ -528,8 +528,6 @@ def generate_patched_package_source(
         "unpack",
         _fg=True,
     )
-    # ebuild_unpack_command_stdout = ebuild_unpack_command.stdout.splitlines()
-    # ic(ebuild_unpack_command_stdout)
     ebuild_prepare_command = sh.sudo.ebuild(
         ebuild_path,
         "prepare",
@@ -576,11 +574,11 @@ def files_provided_by_package(
             "_out": sys.stdout,
             "_err": sys.stderr,
         }
-    qlist_command = qlist_command(_tee=not tty, **_oe, **_tty_out)
+    qlist_command = qlist_command(_tee=not tty, **_oe, **_tty_out).strip()
     if tty:
         return
 
-    qlist_stdout_lines = qlist_command.stdout.splitlines()
+    qlist_stdout_lines = qlist_command.splitlines()
 
     for line in qlist_stdout_lines:
         if (
