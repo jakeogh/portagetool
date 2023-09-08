@@ -505,8 +505,8 @@ def generate_patched_package_source(
     package_location_command_stdout = package_location_command.splitlines()
     package_location = None
     for line in package_location_command_stdout:
-        if line.startswith(b"Location: "):
-            package_location = line.split(b":")[-1].strip()
+        if line.startswith("Location: "):
+            package_location = line.split(":")[-1].strip()
 
     if not package_location:
         raise FileNotFoundError(package_location_command_stdout)
