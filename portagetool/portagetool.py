@@ -48,6 +48,8 @@ from pathtool import write_line_to_file
 
 signal(SIGPIPE, SIG_DFL)
 
+logging.basicConfig(level=logging.INFO)
+
 
 def package_atom_installed(pkg):
     _c = sh.Command("qlist")
@@ -492,8 +494,6 @@ def generate_patched_package_source(
         verbose=verbose,
         verbose_inf=verbose_inf,
     )
-
-    logging.basicConfig(level=logging.INFO)
 
     if not package.startswith("@"):
         assert "/" in package
