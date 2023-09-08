@@ -519,29 +519,29 @@ def generate_patched_package_source(
     )
     ic(ebuild_path)
 
-    ebuild_clean_command = sh.sudo.ebuild(
+    ebuild_clean_command = sh.ebuild(
         ebuild_path,
         "clean",
         _fg=True,
     )
-    ebuild_unpack_command = sh.sudo.ebuild(
+    ebuild_unpack_command = sh.ebuild(
         ebuild_path,
         "unpack",
         _fg=True,
     )
-    ebuild_prepare_command = sh.sudo.ebuild(
+    ebuild_prepare_command = sh.ebuild(
         ebuild_path,
         "prepare",
         _fg=True,
     )
-    ebuild_configure_command = sh.sudo.ebuild(
+    ebuild_configure_command = sh.ebuild(
         ebuild_path,
         "configure",
         _fg=True,
     )
     work_dir = Path("/var/tmp/portage") / package / Path("work")
     ic(work_dir)
-    sh.sudo.chmod("-R", "a+rx", work_dir.parent, _fg=True)
+    sh.chmod("-R", "a+rx", work_dir.parent, _fg=True)
 
 
 @cli.command()
