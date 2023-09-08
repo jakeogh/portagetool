@@ -499,9 +499,7 @@ def generate_patched_package_source(
         assert "/" in package
     sh_oet = {"_out": sys.stdout, "_err": sys.stderr, "_tee": True}
 
-    package = Path(
-        sh.equery("-q", "list", package, **sh_oet).stdout.decode("utf8").strip()
-    )
+    package = Path(sh.equery("-q", "list", package, **sh_oet).strip())
     ic(package)
     package_location_command = sh.equery("-q", "meta", package, **sh_oet).strip()
     package_location_command_stdout = package_location_command.splitlines()
