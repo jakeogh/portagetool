@@ -25,7 +25,6 @@ import logging
 import os
 import sys
 from collections.abc import Iterator
-from math import inf
 from pathlib import Path
 from signal import SIG_DFL
 from signal import SIGPIPE
@@ -39,6 +38,7 @@ from click_auto_help import AHGroup
 from clicktool import click_add_options
 from clicktool import click_global_options
 from clicktool import tv
+from globalverbose import gvd
 from mathtool import sort_versions
 from mptool import output
 from pathtool import write_line_to_file
@@ -80,19 +80,15 @@ def get_latest_postgresql_version(
     verbose: bool | int | float = False,
 ):
     glob_pattern = "/etc/init.d/postgresql-*"
-    if verbose:
-        ic(glob_pattern)
+    ic(glob_pattern)
     results = glob.glob(glob_pattern)
-    if verbose:
-        ic(results)
+    ic(results)
     if len(results) == 0:
         raise FileNotFoundError(glob_pattern)
     versions = [init.split("-")[-1] for init in results]
-    if verbose:
-        ic(versions)
-    versions = sort_versions(versions, verbose=verbose)
-    if verbose:
-        ic(versions)
+    ic(versions)
+    versions = sort_versions(versions)
+    ic(versions)
 
     return versions[0]
 
@@ -122,8 +118,7 @@ def get_use_flags_for_package(
 #    #result = sh.cat(sh.equery('check', package, _piped=True))
 #    result = sh.equery('check', package,)
 #    result = result.strip()
-#    if verbose:
-#        ic(result)
+#    ic(result)
 #    #result = [r[1:] for r in result.split('\n')]
 #
 #    return result
@@ -141,8 +136,7 @@ def resolve_package_name(
         package,
     )
     result = result.strip()
-    if verbose:
-        ic(result)
+    ic(result)
     # result = [r[1:] for r in result.split('\n')]
     return result
 
@@ -159,8 +153,7 @@ def get_python_dependency(
     )
     result = result.strip()
     for line in result.splitlines():
-        if verbose:
-            ic(line)
+        ic(line)
         if line.startswith(b"+python_targets_python"):
             return True
     return False
@@ -173,17 +166,14 @@ def generate_ebuild_dependency_line(
 ):
     package = resolve_package_name(
         package,
-        verbose=verbose,
     )
     line = f"\t{package}"
     if get_python_dependency(
         package,
-        verbose=verbose,
     ):
         line += "[${PYTHON_USEDEP}]"
 
-    if verbose:
-        ic(line)
+    ic(line)
     return line
 
 
@@ -203,7 +193,6 @@ def install(
         nice=nice,
         oneshot=oneshot,
         noreplace=noreplace,
-        verbose=verbose,
     )
 
 
@@ -226,9 +215,7 @@ def install_packages(
     noreplace: bool = False,
     verbose: bool | int | float = False,
 ) -> None:
-    if verbose:
-        logging.basicConfig(level=logging.INFO)
-        ic(packages, upgrade_only)
+    ic(packages, upgrade_only)
 
     _env = os.environ.copy()
 
@@ -311,13 +298,11 @@ def mask_package(
 ) -> None:
     line = f"{package}"
     _pkg = package.split("/")[-1]
-    if verbose:
-        ic(line)
+    ic(line)
     write_line_to_file(
         path=Path(f"/etc/portage/package.mask/{_pkg}"),
         line=line + "\n",
         unique=True,
-        verbose=verbose,
     )
 
 
@@ -328,21 +313,18 @@ def add_accept_keyword(
 ) -> None:
     line = f"={package} **"
     _pkg = package.split("/")[-1]
-    if verbose:
-        ic(line)
+    ic(line)
     try:
         write_line_to_file(
             path=Path("/etc/portage/package.accept_keywords"),
             line=line + "\n",
             unique=True,
-            verbose=verbose,
         )
     except IsADirectoryError:
         write_line_to_file(
             path=Path("/etc/portage/package.accept_keywords") / Path(_pkg),
             line=line + "\n",
             unique=True,
-            verbose=verbose,
         )
 
 
@@ -377,13 +359,12 @@ def _get_latest_postgresql_version(
         verbose_inf=verbose_inf,
     )
 
-    latest = get_latest_postgresql_version(verbose=verbose)
+    latest = get_latest_postgresql_version()
     output(
         latest,
         reason=None,
         dict_output=dict_output,
         tty=tty,
-        verbose=verbose,
     )
 
 
@@ -407,7 +388,7 @@ def _mask_package(
     if not package.startswith("@"):
         assert "/" in package
 
-    mask_package(package=package, verbose=verbose)
+    mask_package(package=package)
 
 
 @cli.command()
@@ -431,7 +412,6 @@ def use_flags_for_package(
         assert "/" in package
     flags = get_use_flags_for_package(
         package=package,
-        verbose=verbose,
     )
     for flag in flags:
         output(
@@ -439,7 +419,6 @@ def use_flags_for_package(
             reason=package,
             dict_output=dict_output,
             tty=tty,
-            verbose=verbose,
         )
 
 
@@ -464,7 +443,6 @@ def set_use_flag_for_package(
 
     valid_flags = get_use_flags_for_package(
         package=package,
-        verbose=verbose,
     )
 
     if not package.startswith("@"):
@@ -582,11 +560,9 @@ def files_provided_by_package(
     qlist_stdout_lines = qlist_command.splitlines()
 
     for line in qlist_stdout_lines:
-        if (
-            verbose == inf
-        ):  # `verbose: int >= math inf` debug protocol works  #inf has always been a float... all `verbose: int` type annotations are wrong
+        if gvd:
             ic(line)
-        output(line, reason=None, dict_output=dict_output, tty=tty, verbose=verbose)
+        output(line, reason=None, dict_output=dict_output, tty=tty)
 
 
 @click.command()
@@ -657,7 +633,6 @@ def _install_package(
         oneshot=oneshot,
         upgrade_only=upgrade_only,
         noreplace=noreplace,
-        verbose=verbose,
     )
 
 
@@ -682,14 +657,12 @@ def _resolve_package(
 
     result = resolve_package_name(
         package=package,
-        verbose=verbose,
     )
     output(
         result,
         reason=package,
         dict_output=dict_output,
         tty=tty,
-        verbose=verbose,
     )
 
 
@@ -715,5 +688,4 @@ def _list(
             reason=None,
             dict_output=dict_output,
             tty=tty,
-            verbose=verbose,
         )
