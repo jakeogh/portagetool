@@ -493,6 +493,8 @@ def generate_patched_package_source(
         verbose_inf=verbose_inf,
     )
 
+    logging.basicConfig(level=logging.INFO)
+
     if not package.startswith("@"):
         assert "/" in package
     sh_oet = {"_out": sys.stdout, "_err": sys.stderr, "_tee": True}
