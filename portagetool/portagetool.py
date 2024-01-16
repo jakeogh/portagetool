@@ -37,14 +37,14 @@ from asserttool import icp
 from click_auto_help import AHGroup
 from clicktool import click_add_options
 from clicktool import click_global_options
-from clicktool import tv
+from clicktool import tvicgvd
 from globalverbose import gvd
 from mathtool import sort_versions
 from mptool import output
 from pathtool import write_line_to_file
 
 # from retry_on_exception import retry_on_exception
-# from timetool import get_timestamp
+# from timestamptool import get_timestamp
 
 signal(SIGPIPE, SIG_DFL)
 
@@ -77,7 +77,7 @@ def portage_categories():
 
 
 def get_latest_postgresql_version(
-    verbose: bool | int | float = False,
+    verbose: bool = False,
 ):
     glob_pattern = "/etc/init.d/postgresql-*"
     ic(glob_pattern)
@@ -96,7 +96,7 @@ def get_latest_postgresql_version(
 def get_use_flags_for_package(
     package: str,
     *,
-    verbose: bool | int | float = False,
+    verbose: bool = False,
 ):
     # icp(package)
     # result = sh.cat(sh.equery("uses", package, _piped=True))
@@ -112,7 +112,7 @@ def get_use_flags_for_package(
 # broken, equery check > bla fails
 # def resolve_and_check_package_name(package: str,
 #                                   *,
-#                                   verbose: bool | int | float = False,
+#                                   verbose: bool = False,
 #                                   ):
 #
 #    #result = sh.cat(sh.equery('check', package, _piped=True))
@@ -127,7 +127,7 @@ def get_use_flags_for_package(
 def resolve_package_name(
     package: str,
     *,
-    verbose: bool | int | float = False,
+    verbose: bool = False,
 ) -> str:
     # result = sh.cat(sh.equery('check', package, _piped=True))
     result = sh.equery(
@@ -144,7 +144,7 @@ def resolve_package_name(
 def get_python_dependency(
     package: str,
     *,
-    verbose: bool | int | float = False,
+    verbose: bool = False,
 ) -> bool:
     result = sh.equery(
         "--quiet",
@@ -162,7 +162,7 @@ def get_python_dependency(
 def generate_ebuild_dependency_line(
     package: str,
     *,
-    verbose: bool | int | float = False,
+    verbose: bool = False,
 ):
     package = resolve_package_name(
         package,
@@ -184,7 +184,7 @@ def install(
     nice: bool = False,
     oneshot: bool = False,
     noreplace: bool = False,
-    verbose: bool | int | float = False,
+    verbose: bool = False,
 ):
     install_packages(
         packages=(package,),
@@ -197,7 +197,7 @@ def install(
 
 
 def installed_packages(
-    verbose: bool | int | float = False,
+    verbose: bool = False,
 ) -> Iterator[str]:
     qlist_command = sh.qlist.bake("-IRCv")
     _results = qlist_command().strip().split("\n")
@@ -213,7 +213,7 @@ def install_packages(
     nice: bool = False,
     oneshot: bool = False,
     noreplace: bool = False,
-    verbose: bool | int | float = False,
+    verbose: bool = False,
 ) -> None:
     ic(packages, upgrade_only)
 
@@ -294,7 +294,7 @@ def install_packages(
 def mask_package(
     package: str,
     *,
-    verbose: bool | int | float = False,
+    verbose: bool = False,
 ) -> None:
     line = f"{package}"
     _pkg = package.split("/")[-1]
@@ -309,7 +309,7 @@ def mask_package(
 def add_accept_keyword(
     package: str,
     *,
-    verbose: bool | int | float = False,
+    verbose: bool = False,
 ) -> None:
     line = f"={package} **"
     _pkg = package.split("/")[-1]
@@ -335,12 +335,14 @@ def cli(
     ctx,
     verbose_inf: bool,
     dict_output: bool,
-    verbose: bool | int | float = False,
+    verbose: bool = False,
 ) -> None:
-    tty, verbose = tv(
+    tty, verbose = tvicgvd(
         ctx=ctx,
         verbose=verbose,
         verbose_inf=verbose_inf,
+        ic=ic,
+        gvd=gvd,
     )
 
 
@@ -351,12 +353,14 @@ def _get_latest_postgresql_version(
     ctx,
     verbose_inf: bool,
     dict_output: bool,
-    verbose: bool | int | float = False,
+    verbose: bool = False,
 ) -> None:
-    tty, verbose = tv(
+    tty, verbose = tvicgvd(
         ctx=ctx,
         verbose=verbose,
         verbose_inf=verbose_inf,
+        ic=ic,
+        gvd=gvd,
     )
 
     latest = get_latest_postgresql_version()
@@ -377,12 +381,14 @@ def _mask_package(
     package: str,
     verbose_inf: bool,
     dict_output: bool,
-    verbose: bool | int | float = False,
+    verbose: bool = False,
 ) -> None:
-    tty, verbose = tv(
+    tty, verbose = tvicgvd(
         ctx=ctx,
         verbose=verbose,
         verbose_inf=verbose_inf,
+        ic=ic,
+        gvd=gvd,
     )
 
     if not package.startswith("@"):
@@ -400,12 +406,14 @@ def use_flags_for_package(
     package: str,
     verbose_inf: bool,
     dict_output: bool,
-    verbose: bool | int | float = False,
+    verbose: bool = False,
 ) -> None:
-    tty, verbose = tv(
+    tty, verbose = tvicgvd(
         ctx=ctx,
         verbose=verbose,
         verbose_inf=verbose_inf,
+        ic=ic,
+        gvd=gvd,
     )
 
     if not package.startswith("@"):
@@ -433,12 +441,14 @@ def set_use_flag_for_package(
     flag: str,
     verbose_inf: bool,
     dict_output: bool,
-    verbose: bool | int | float = False,
+    verbose: bool = False,
 ) -> None:
-    tty, verbose = tv(
+    tty, verbose = tvicgvd(
         ctx=ctx,
         verbose=verbose,
         verbose_inf=verbose_inf,
+        ic=ic,
+        gvd=gvd,
     )
 
     valid_flags = get_use_flags_for_package(
@@ -465,12 +475,14 @@ def generate_patched_package_source(
     package: str,
     verbose_inf: bool,
     dict_output: bool,
-    verbose: bool | int | float = False,
+    verbose: bool = False,
 ) -> None:
-    tty, verbose = tv(
+    tty, verbose = tvicgvd(
         ctx=ctx,
         verbose=verbose,
         verbose_inf=verbose_inf,
+        ic=ic,
+        gvd=gvd,
     )
 
     if not package.startswith("@"):
@@ -531,12 +543,14 @@ def files_provided_by_package(
     package: str,
     verbose_inf: bool,
     dict_output: bool,
-    verbose: bool | int | float = False,
+    verbose: bool = False,
 ) -> None:
-    tty, verbose = tv(
+    tty, verbose = tvicgvd(
         ctx=ctx,
         verbose=verbose,
         verbose_inf=verbose_inf,
+        ic=ic,
+        gvd=gvd,
     )
 
     qlist_command = sh.Command("qlist")
@@ -553,6 +567,7 @@ def files_provided_by_package(
             "_out": sys.stdout,
             "_err": sys.stderr,
         }
+    icp(tty, _tty_out, _oe)
     qlist_command = qlist_command(_tee=not tty, **_oe, **_tty_out).strip()
     if tty:
         return
@@ -574,12 +589,14 @@ def emerge_keepwork(
     package: str,
     verbose_inf: bool,
     dict_output: bool,
-    verbose: bool | int | float = False,
+    verbose: bool = False,
 ) -> None:
-    tty, verbose = tv(
+    tty, verbose = tvicgvd(
         ctx=ctx,
         verbose=verbose,
         verbose_inf=verbose_inf,
+        ic=ic,
+        gvd=gvd,
     )
     if not package.startswith("@"):
         assert "/" in package
@@ -614,12 +631,14 @@ def _install_package(
     nice: bool,
     oneshot: bool,
     upgrade_only: bool,
-    verbose: bool | int | float = False,
+    verbose: bool = False,
 ) -> None:
-    tty, verbose = tv(
+    tty, verbose = tvicgvd(
         ctx=ctx,
         verbose=verbose,
         verbose_inf=verbose_inf,
+        ic=ic,
+        gvd=gvd,
     )
 
     for package in packages:
@@ -645,14 +664,16 @@ def _resolve_package(
     package: str,
     verbose_inf: bool,
     dict_output: bool,
-    verbose: bool | int | float = False,
+    verbose: bool = False,
 ) -> None:
     if not package.startswith("@"):
         assert "/" in package
-    tty, verbose = tv(
+    tty, verbose = tvicgvd(
         ctx=ctx,
         verbose=verbose,
         verbose_inf=verbose_inf,
+        ic=ic,
+        gvd=gvd,
     )
 
     result = resolve_package_name(
@@ -673,12 +694,14 @@ def _list(
     ctx,
     verbose_inf: bool,
     dict_output: bool,
-    verbose: bool | int | float = False,
+    verbose: bool = False,
 ) -> None:
-    tty, verbose = tv(
+    tty, verbose = tvicgvd(
         ctx=ctx,
         verbose=verbose,
         verbose_inf=verbose_inf,
+        ic=ic,
+        gvd=gvd,
     )
 
     results = installed_packages()
