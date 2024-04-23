@@ -76,9 +76,7 @@ def portage_categories():
     return categories
 
 
-def get_latest_postgresql_version(
-    verbose: bool = False,
-):
+def get_latest_postgresql_version():
     glob_pattern = "/etc/init.d/postgresql-*"
     ic(glob_pattern)
     results = glob.glob(glob_pattern)
@@ -93,11 +91,7 @@ def get_latest_postgresql_version(
     return versions[0]
 
 
-def get_use_flags_for_package(
-    package: str,
-    *,
-    verbose: bool = False,
-):
+def get_use_flags_for_package(package: str):
     # icp(package)
     # result = sh.cat(sh.equery("uses", package, _piped=True))
     result = sh.equery("uses", package, _tty_out=False)
@@ -111,8 +105,6 @@ def get_use_flags_for_package(
 
 # broken, equery check > bla fails
 # def resolve_and_check_package_name(package: str,
-#                                   *,
-#                                   verbose: bool = False,
 #                                   ):
 #
 #    #result = sh.cat(sh.equery('check', package, _piped=True))
@@ -126,8 +118,6 @@ def get_use_flags_for_package(
 
 def resolve_package_name(
     package: str,
-    *,
-    verbose: bool = False,
 ) -> str:
     # result = sh.cat(sh.equery('check', package, _piped=True))
     result = sh.equery(
@@ -143,8 +133,6 @@ def resolve_package_name(
 
 def get_python_dependency(
     package: str,
-    *,
-    verbose: bool = False,
 ) -> bool:
     result = sh.equery(
         "--quiet",
@@ -161,8 +149,6 @@ def get_python_dependency(
 
 def generate_ebuild_dependency_line(
     package: str,
-    *,
-    verbose: bool = False,
 ):
     package = resolve_package_name(
         package,
@@ -184,7 +170,6 @@ def install(
     nice: bool = False,
     oneshot: bool = False,
     noreplace: bool = False,
-    verbose: bool = False,
 ):
     install_packages(
         packages=(package,),
@@ -196,9 +181,7 @@ def install(
     )
 
 
-def installed_packages(
-    verbose: bool = False,
-) -> Iterator[str]:
+def installed_packages() -> Iterator[str]:
     qlist_command = sh.qlist.bake("-IRCv")
     _results = qlist_command().strip().split("\n")
     for _result in _results:
@@ -213,7 +196,6 @@ def install_packages(
     nice: bool = False,
     oneshot: bool = False,
     noreplace: bool = False,
-    verbose: bool = False,
 ) -> None:
     ic(packages, upgrade_only)
 
@@ -293,8 +275,6 @@ def install_packages(
 
 def mask_package(
     package: str,
-    *,
-    verbose: bool = False,
 ) -> None:
     line = f"{package}"
     _pkg = package.split("/")[-1]
@@ -308,8 +288,6 @@ def mask_package(
 
 def add_accept_keyword(
     package: str,
-    *,
-    verbose: bool = False,
 ) -> None:
     line = f"={package} **"
     _pkg = package.split("/")[-1]
