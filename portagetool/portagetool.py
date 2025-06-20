@@ -545,7 +545,8 @@ def files_provided_by_package(
             "_out": sys.stdout,
             "_err": sys.stderr,
         }
-    icp(tty, _tty_out, _oe)
+    ic(tty, _tty_out, _oe)
+    icp(qlist_command)
     qlist_command = qlist_command(_tee=not tty, **_oe, **_tty_out).strip()
     if tty:
         return
