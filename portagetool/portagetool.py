@@ -408,12 +408,27 @@ def use_flags_for_package(
         )
 
 
-@cli.command()
+def set_use_flag_for_package(*, package: str, flag: str):
+    valid_flags = get_use_flags_for_package(
+        package=package,
+    )
+
+    if not package.startswith("@"):
+        assert "/" in package
+    raw_flag = flag
+    if flag.startswith("-"):
+        raw_flag = flag[1:]
+
+    icp(raw_flag, valid_flags)
+    assert raw_flag in valid_flags
+
+
+@cli.command('set-use-flag-for-package')
 @click.argument("package", type=str, nargs=1)
 @click.argument("flag", type=str, nargs=1)
 @click_add_options(click_global_options)
 @click.pass_context
-def set_use_flag_for_package(
+def _set_use_flag_for_package(
     ctx,
     package: str,
     flag: str,
@@ -429,19 +444,8 @@ def set_use_flag_for_package(
         gvd=gvd,
     )
 
-    valid_flags = get_use_flags_for_package(
-        package=package,
-    )
+    set_use_flag_for_package(package=package, flag=flag)
 
-    if not package.startswith("@"):
-        assert "/" in package
-    raw_flag = flag
-    if flag.startswith("-"):
-        raw_flag = flag[1:]
-
-    assert raw_flag in valid_flags
-
-    assert False
 
 
 @cli.command()
