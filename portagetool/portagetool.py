@@ -415,12 +415,21 @@ def set_use_flag_for_package(*, package: str, flag: str):
 
     if not package.startswith("@"):
         assert "/" in package
+    package_group = package.split('/')[0]
+    package_name = package.split('/')[1]
     raw_flag = flag
     if flag.startswith("-"):
         raw_flag = flag[1:]
 
     icp(raw_flag, valid_flags)
     assert raw_flag in valid_flags
+
+    line = f"{package} {flag}"
+    write_line_to_file(
+        path=Path(f"/etc/portage/package.use/{package_group}/{package_name}"),
+        line=line + "\n",
+        unique=True,
+    )
 
 
 @cli.command('set-use-flag-for-package')
