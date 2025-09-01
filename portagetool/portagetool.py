@@ -482,9 +482,12 @@ def generate_patched_package_source(
     # package = Path(sh.equery("-q", "list", package, **sh_oet).strip())
     package = Path(package)  # pathlib abuse, but works nice
     icp(package)
-    package_location_command = sh.equery("-q", "meta", package, **sh_oet).strip()
+    # package_location_command = sh.equery("-q", "meta", package, **sh_oet).strip()
+    package_location_command = sh.Command("equery")
+    package_location_command.bake("-q", "meta", package)
     icp(package_location_command)
-    package_location_command_stdout = package_location_command.splitlines()
+    package_location_command(**sh_oet)
+    package_location_command_stdout = package_location_command.strip().splitlines()
     package_location = None
     for line in package_location_command_stdout:
         if line.startswith("Location: "):
