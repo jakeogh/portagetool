@@ -415,8 +415,8 @@ def set_use_flag_for_package(*, package: str, flag: str):
 
     if not package.startswith("@"):
         assert "/" in package
-    package_group = package.split('/')[0]
-    package_name = package.split('/')[1]
+    package_group = package.split("/")[0]
+    package_name = package.split("/")[1]
     raw_flag = flag
     if flag.startswith("-"):
         raw_flag = flag[1:]
@@ -432,7 +432,7 @@ def set_use_flag_for_package(*, package: str, flag: str):
     )
 
 
-@cli.command('set-use-flag-for-package')
+@cli.command("set-use-flag-for-package")
 @click.argument("package", type=str, nargs=1)
 @click.argument("flag", type=str, nargs=1)
 @click_add_options(click_global_options)
@@ -454,7 +454,6 @@ def _set_use_flag_for_package(
     )
 
     set_use_flag_for_package(package=package, flag=flag)
-
 
 
 @cli.command()
@@ -484,6 +483,7 @@ def generate_patched_package_source(
     package = Path(package)  # pathlib abuse, but works nice
     icp(package)
     package_location_command = sh.equery("-q", "meta", package, **sh_oet).strip()
+    icp(package_location_command)
     package_location_command_stdout = package_location_command.splitlines()
     package_location = None
     for line in package_location_command_stdout:
