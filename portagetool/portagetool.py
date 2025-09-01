@@ -484,10 +484,11 @@ def generate_patched_package_source(
     icp(package)
     # package_location_command = sh.equery("-q", "meta", package, **sh_oet).strip()
     package_location_command = sh.Command("equery")
-    package_location_command.bake("-q", "meta", package)
     icp(package_location_command)
-    package_location_command(**sh_oet)
-    package_location_command_stdout = package_location_command.strip().splitlines()
+    _package_location_command = package_location_command.bake("-q", "meta", package)
+    icp(_package_location_command)
+    _package_location_command(**sh_oet)
+    package_location_command_stdout = _package_location_command.strip().splitlines()
     package_location = None
     for line in package_location_command_stdout:
         if line.startswith("Location: "):
