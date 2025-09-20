@@ -1,23 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf8 -*-
 
-# pylint: disable=missing-docstring               # [C0111] docstrings are always outdated and wrong
-# pylint: disable=missing-module-docstring        # [C0114]
-# pylint: disable=fixme                           # [W0511] todo is encouraged
-# pylint: disable=line-too-long                   # [C0301]
-# pylint: disable=too-many-instance-attributes    # [R0902]
-# pylint: disable=too-many-lines                  # [C0302] too many lines in module
-# pylint: disable=invalid-name                    # [C0103] single letter var names, name too descriptive
-# pylint: disable=too-many-return-statements      # [R0911]
-# pylint: disable=too-many-branches               # [R0912]
-# pylint: disable=too-many-statements             # [R0915]
-# pylint: disable=too-many-arguments              # [R0913]
-# pylint: disable=too-many-nested-blocks          # [R1702]
-# pylint: disable=too-many-locals                 # [R0914]
-# pylint: disable=too-few-public-methods          # [R0903]
-# pylint: disable=no-member                       # [E1101] no member for base
-# pylint: disable=attribute-defined-outside-init  # [W0201]
-# pylint: disable=too-many-boolean-expressions    # [R0916] in if statement
+# pylint: disable=no-member  # sh
+
 from __future__ import annotations
 
 import glob
@@ -31,17 +16,17 @@ from signal import SIGPIPE
 from signal import signal
 
 import click
-import sh
+import sh  # type: ignore
 from asserttool import ic
 from asserttool import icp
 from click_auto_help import AHGroup
 from clicktool import click_add_options
 from clicktool import click_global_options
 from clicktool import tvicgvd
+from filetool import ensure_line_in_config_file
 from globalverbose import gvd
 from mathtool import sort_versions
 from mptool import output
-from pathtool import write_line_to_file
 
 # from retry_on_exception import retry_on_exception
 # from timestamptool import get_timestamp
@@ -279,10 +264,11 @@ def mask_package(
     line = f"{package}"
     _pkg = package.split("/")[-1]
     ic(line)
-    write_line_to_file(
+    ensure_line_in_config_file(
         path=Path(f"/etc/portage/package.mask/{_pkg}"),
         line=line + "\n",
-        unique=True,
+        comment_marker='#',
+        ignore_leading_whitespace=True,
     )
 
 
@@ -293,16 +279,18 @@ def add_accept_keyword(
     _pkg = package.split("/")[-1]
     ic(line)
     try:
-        write_line_to_file(
+        ensure_line_in_config_file(
             path=Path("/etc/portage/package.accept_keywords"),
             line=line + "\n",
-            unique=True,
+            comment_marker='#',
+            ignore_leading_whitespace=True,
         )
     except IsADirectoryError:
-        write_line_to_file(
+        ensure_line_in_config_file(
             path=Path("/etc/portage/package.accept_keywords") / Path(_pkg),
             line=line + "\n",
-            unique=True,
+            comment_marker='#',
+            ignore_leading_whitespace=True,
         )
 
 
@@ -425,10 +413,11 @@ def set_use_flag_for_package(*, package: str, flag: str):
     assert raw_flag in valid_flags
 
     line = f"{package} {flag}"
-    write_line_to_file(
+    ensure_line_in_config_file(
         path=Path(f"/etc/portage/package.use/{package_group}/{package_name}"),
         line=line + "\n",
-        unique=True,
+        comment_marker='#',
+        ignore_leading_whitespace=True,
     )
 
 
