@@ -219,7 +219,11 @@ def install_packages(
             emerge_command = emerge_command.bake(package)
 
         emerge_command(
-            "-p", _ok_code=[0, 1], _env=_env, _out=sys.stdout, _err=sys.stderr
+            "-p",
+            _ok_code=[0, 1],
+            _env=_env,
+            _out=sys.stdout,
+            _err=sys.stderr,
         )
         emerge_command(
             "--quiet",
@@ -267,7 +271,7 @@ def mask_package(
     ensure_line_in_config_file(
         path=Path(f"/etc/portage/package.mask/{_pkg}"),
         line=line + "\n",
-        comment_marker='#',
+        comment_marker="#",
         ignore_leading_whitespace=True,
     )
 
@@ -282,14 +286,14 @@ def add_accept_keyword(
         ensure_line_in_config_file(
             path=Path("/etc/portage/package.accept_keywords"),
             line=line + "\n",
-            comment_marker='#',
+            comment_marker="#",
             ignore_leading_whitespace=True,
         )
     except IsADirectoryError:
         ensure_line_in_config_file(
             path=Path("/etc/portage/package.accept_keywords") / Path(_pkg),
             line=line + "\n",
-            comment_marker='#',
+            comment_marker="#",
             ignore_leading_whitespace=True,
         )
 
@@ -416,7 +420,7 @@ def set_use_flag_for_package(*, package: str, flag: str):
     ensure_line_in_config_file(
         path=Path(f"/etc/portage/package.use/{package_group}/{package_name}"),
         line=line + "\n",
-        comment_marker='#',
+        comment_marker="#",
         ignore_leading_whitespace=True,
     )
 
@@ -515,7 +519,12 @@ def generate_patched_package_source(
     )
     work_dir = Path("/var/tmp/portage") / package / Path("work")
     ic(work_dir)
-    sh.chmod("-R", "a+rx", work_dir.parent, _fg=True)
+    sh.chmod(
+        "-R",
+        "a+rx",
+        work_dir.parent,
+        _fg=True,
+    )
 
 
 @cli.command()
@@ -562,7 +571,12 @@ def files_provided_by_package(
     for line in qlist_stdout_lines:
         if gvd:
             ic(line)
-        output(line, reason=None, dict_output=dict_output, tty=tty)
+        output(
+            line,
+            reason=None,
+            dict_output=dict_output,
+            tty=tty,
+        )
 
 
 @click.command()
