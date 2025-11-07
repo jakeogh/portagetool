@@ -270,7 +270,7 @@ def mask_package(
     ic(line)
     ensure_line_in_config_file(
         path=Path(f"/etc/portage/package.mask/{_pkg}"),
-        line=line + "\n",
+        line=line,
         comment_marker="#",
         ignore_leading_whitespace=True,
     )
@@ -285,14 +285,14 @@ def add_accept_keyword(
     try:
         ensure_line_in_config_file(
             path=Path("/etc/portage/package.accept_keywords"),
-            line=line + "\n",
+            line=line,
             comment_marker="#",
             ignore_leading_whitespace=True,
         )
     except IsADirectoryError:
         ensure_line_in_config_file(
             path=Path("/etc/portage/package.accept_keywords") / Path(_pkg),
-            line=line + "\n",
+            line=line,
             comment_marker="#",
             ignore_leading_whitespace=True,
         )
@@ -417,9 +417,10 @@ def set_use_flag_for_package(*, package: str, flag: str):
     assert raw_flag in valid_flags
 
     line = f"{package} {flag}"
+    icp(line)
     ensure_line_in_config_file(
         path=Path(f"/etc/portage/package.use/{package_group}/{package_name}"),
-        line=line + "\n",
+        line=line,
         comment_marker="#",
         ignore_leading_whitespace=True,
     )
