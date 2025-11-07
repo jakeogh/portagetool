@@ -151,7 +151,8 @@ def install(
 
 
 def installed_packages() -> Iterator[str]:
-    qlist_command = hs.Command("qlist").bake("-IRCv")
+    qlist_command = hs.Command("qlist")
+    qlist_command.bake("-IRCv")
     _results = qlist_command().strip().split("\n")
     for _result in _results:
         yield _result
@@ -178,7 +179,8 @@ def install_packages(
     if force:
         _env["CONFIG_PROTECT"] = "-*"
 
-        emerge_command = hs.Command("emerge").bake(
+        emerge_command = hs.Command("emerge")
+        emerge_command.bake(
             "-v",
             "--with-bdeps=y",
             "--tree",
@@ -217,7 +219,8 @@ def install_packages(
             _err=sys.stderr,
         )
     else:
-        emerge_command = hs.Command("emerge").bake(
+        emerge_command = hs.Command("emerge")
+        emerge_command.bake(
             "--with-bdeps=y",
             "-v",
             "--tree",
@@ -461,10 +464,10 @@ def generate_patched_package_source(
     icp(package)
     package_location_command = hs.Command("equery")
     icp(package_location_command)
-    _package_location_command = package_location_command.bake("-q", "meta", package)
-    icp(_package_location_command)
-    _package_location_command(**sh_oet)
-    package_location_command_stdout = _package_location_command.strip().splitlines()
+    package_location_command.bake("-q", "meta", package)
+    icp(package_location_command)
+    result = package_location_command(**sh_oet)
+    package_location_command_stdout = result.strip().splitlines()
     package_location = None
     for line in package_location_command_stdout:
         if line.startswith("Location: "):
@@ -530,7 +533,7 @@ def files_provided_by_package(
     )
 
     qlist_command = hs.Command("qlist")
-    qlist_command = qlist_command.bake("--exact", package)
+    qlist_command.bake("--exact", package)
 
     if not package.startswith("@"):
         assert "/" in package
