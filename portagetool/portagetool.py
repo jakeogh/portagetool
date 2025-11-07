@@ -16,7 +16,7 @@ from signal import SIGPIPE
 from signal import signal
 
 import click
-import sh  # type: ignore
+import hs
 from asserttool import ic
 from asserttool import icp
 from click_auto_help import AHGroup
@@ -37,18 +37,18 @@ logging.basicConfig(level=logging.INFO)
 
 
 def package_atom_installed(pkg):
-    _c = sh.Command("qlist")
+    _c = hs.Command("qlist")
     _c = _c.bake("-ICve", pkg)
     try:
         _c()
-    except sh.ErrorReturnCode_1:
+    except hs.ErrorReturnCode_1:
         return False
     return True
 
 
 def portage_categories():
     categories_path = (
-        Path(str(sh.portageq("get_repo_path", "/", "gentoo").strip()))
+        Path(str(hs.portageq("get_repo_path", "/", "gentoo").strip()))
         / Path("profiles")
         / Path("categories")
     )
@@ -77,9 +77,7 @@ def get_latest_postgresql_version():
 
 
 def get_use_flags_for_package(package: str):
-    # icp(package)
-    # result = sh.cat(sh.equery("uses", package, _piped=True))
-    result = sh.equery("uses", package, _tty_out=False)
+    result = hs.Command("equery")("uses", package, _tty_out=False)
     result = result.strip()
     # icp(result)
     result = [r[1:] for r in result.split("\n")]
@@ -88,24 +86,10 @@ def get_use_flags_for_package(package: str):
     return result
 
 
-# broken, equery check > bla fails
-# def resolve_and_check_package_name(package: str,
-#                                   ):
-#
-#    #result = sh.cat(sh.equery('check', package, _piped=True))
-#    result = sh.equery('check', package,)
-#    result = result.strip()
-#    ic(result)
-#    #result = [r[1:] for r in result.split('\n')]
-#
-#    return result
-
-
 def resolve_package_name(
     package: str,
 ) -> str:
-    # result = sh.cat(sh.equery('check', package, _piped=True))
-    result = sh.equery(
+    result = hs.Command("equery")(
         "--quiet",
         "list",
         package,
@@ -119,7 +103,7 @@ def resolve_package_name(
 def get_python_dependency(
     package: str,
 ) -> bool:
-    result = sh.equery(
+    result = hs.Command("equery")(
         "--quiet",
         "uses",
         package,
@@ -167,7 +151,7 @@ def install(
 
 
 def installed_packages() -> Iterator[str]:
-    qlist_command = sh.qlist.bake("-IRCv")
+    qlist_command = hs.Command("qlist").bake("-IRCv")
     _results = qlist_command().strip().split("\n")
     for _result in _results:
         yield _result
@@ -194,7 +178,7 @@ def install_packages(
     if force:
         _env["CONFIG_PROTECT"] = "-*"
 
-        emerge_command = sh.emerge.bake(
+        emerge_command = hs.Command("emerge").bake(
             "-v",
             "--with-bdeps=y",
             "--tree",
@@ -206,17 +190,17 @@ def install_packages(
         )
 
         if noreplace:
-            emerge_command = emerge_command.bake("--noreplace")
+            emerge_command.bake("--noreplace")
 
         if oneshot:
-            emerge_command = emerge_command.bake("--oneshot")
+            emerge_command.bake("--oneshot")
 
         if upgrade_only:
-            emerge_command = emerge_command.bake("-u")
+            emerge_command.bake("-u")
 
         package = None
         for package in packages:
-            emerge_command = emerge_command.bake(package)
+            emerge_command.bake(package)
 
         emerge_command(
             "-p",
@@ -233,7 +217,7 @@ def install_packages(
             _err=sys.stderr,
         )
     else:
-        emerge_command = sh.emerge.bake(
+        emerge_command = hs.Command("emerge").bake(
             "--with-bdeps=y",
             "-v",
             "--tree",
@@ -243,18 +227,18 @@ def install_packages(
         )
 
         if noreplace:
-            emerge_command = emerge_command.bake("--noreplace")
+            emerge_command.bake("--noreplace")
 
         if oneshot:
-            emerge_command = emerge_command.bake("--oneshot")
+            emerge_command.bake("--oneshot")
 
         if upgrade_only:
-            emerge_command = emerge_command.bake("-u")
+            emerge_command.bake("-u")
 
         package = None
         for package in packages:
             ic(package)
-            emerge_command = emerge_command.bake(package)
+            emerge_command.bake(package)
 
         if package:
             ic(package)
@@ -473,11 +457,9 @@ def generate_patched_package_source(
         assert "/" in package
     sh_oet = {"_out": sys.stdout, "_err": sys.stderr, "_tee": True}
 
-    # package = Path(sh.equery("-q", "list", package, **sh_oet).strip())
     package = Path(package)  # pathlib abuse, but works nice
     icp(package)
-    # package_location_command = sh.equery("-q", "meta", package, **sh_oet).strip()
-    package_location_command = sh.Command("equery")
+    package_location_command = hs.Command("equery")
     icp(package_location_command)
     _package_location_command = package_location_command.bake("-q", "meta", package)
     icp(_package_location_command)
@@ -498,29 +480,29 @@ def generate_patched_package_source(
     )
     ic(ebuild_path)
 
-    ebuild_clean_command = sh.ebuild(
+    ebuild_clean_command = hs.Command("ebuild")(
         ebuild_path,
         "clean",
         _fg=True,
     )
-    ebuild_unpack_command = sh.ebuild(
+    ebuild_unpack_command = hs.Command("ebuild")(
         ebuild_path,
         "unpack",
         _fg=True,
     )
-    ebuild_prepare_command = sh.ebuild(
+    ebuild_prepare_command = hs.Command("ebuild")(
         ebuild_path,
         "prepare",
         _fg=True,
     )
-    ebuild_configure_command = sh.ebuild(
+    ebuild_configure_command = hs.Command("ebuild")(
         ebuild_path,
         "configure",
         _fg=True,
     )
     work_dir = Path("/var/tmp/portage") / package / Path("work")
     ic(work_dir)
-    sh.chmod(
+    hs.Command("chmod")(
         "-R",
         "a+rx",
         work_dir.parent,
@@ -547,7 +529,7 @@ def files_provided_by_package(
         gvd=gvd,
     )
 
-    qlist_command = sh.Command("qlist")
+    qlist_command = hs.Command("qlist")
     qlist_command = qlist_command.bake("--exact", package)
 
     if not package.startswith("@"):
@@ -601,7 +583,7 @@ def emerge_keepwork(
     if not package.startswith("@"):
         assert "/" in package
 
-    sh.emerge(
+    hs.Command("emerge")(
         "--verbose",
         "--tree",
         "--usepkg=n",
