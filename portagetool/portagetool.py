@@ -48,7 +48,7 @@ def package_atom_installed(pkg):
 
 def portage_categories():
     categories_path = (
-        Path(str(hs.portageq("get_repo_path", "/", "gentoo").strip()))
+        Path(str(hs.Command("portageq")("get_repo_path", "/", "gentoo").strip()))
         / Path("profiles")
         / Path("categories")
     )
