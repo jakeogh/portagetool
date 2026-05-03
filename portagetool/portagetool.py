@@ -112,7 +112,7 @@ def _qualify_atom(package: str) -> str:
 
 def package_atom_installed(pkg: str) -> bool:
     _c = hs.Command("qlist")
-    _c = _c.bake("-ICve", pkg)
+    _c.bake("-ICve", pkg)
     try:
         _c()
     except hs.ErrorReturnCode_1:
