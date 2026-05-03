@@ -8,6 +8,7 @@ from __future__ import annotations
 import glob
 import logging
 import os
+import re
 import sys
 from collections.abc import Iterator
 from pathlib import Path
@@ -28,15 +29,88 @@ from globalverbose import gvd
 from mathtool import sort_versions
 from mptool import output
 
-# from retry_on_exception import retry_on_exception
-# from timestamptool import get_timestamp
-
 signal(SIGPIPE, SIG_DFL)
 
 logging.basicConfig(level=logging.INFO)
 
 
-def package_atom_installed(pkg):
+# Portage version suffix on a cat/name-ver atom: leading `-`, then version per PMS-ish.
+_VER_RE = re.compile(
+    r"-(\d+(?:\.\d+)*[a-z]?(?:_(?:alpha|beta|pre|rc|p)\d*)*(?:-r\d+)?)$"
+)
+
+
+def _strip_version(atom: str) -> str:
+    m = _VER_RE.search(atom)
+    return atom[: m.start()] if m else atom
+
+
+def qualify_package(package: str) -> str:
+    """Resolve a bare package name to category/name.
+
+    Returns unchanged if already qualified (cat/name), an atom set (@name),
+    a versioned/operator atom (=cat/..., >=cat/..., etc.), or already contains '/'.
+    Otherwise queries `equery list` (installed first, then tree+overlays) and
+    returns the unique cat/name match. Raises click.ClickException when there
+    is no match or multiple matches.
+    """
+    if (
+        package.startswith("@")
+        or "/" in package
+        or package.startswith(("=", ">", "<", "~", "!"))
+    ):
+        return package
+
+    matches: set[str] = set()
+    # Pass 1: installed only (default). Pass 2: installed + portage + overlays.
+    for extra in ([], ["-ipo"]):
+        try:
+            result = str(
+                hs.Command("equery")(
+                    "--quiet", "list", *extra, package, _tty_out=False
+                )
+            )
+        except hs.ErrorReturnCode:
+            result = ""
+        for line in result.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            line = line.split(":", 1)[0]  # drop slot/repo suffix
+            cat_name = _strip_version(line)
+            if "/" in cat_name:
+                matches.add(cat_name)
+        if matches:
+            break
+
+    if not matches:
+        raise click.ClickException(f"No package matches '{package}'")
+    if len(matches) > 1:
+        lines = [f"Package name '{package}' is ambiguous. Possibilities:"]
+        lines.extend(f"  {m}" for m in sorted(matches))
+        raise click.ClickException("\n".join(lines))
+
+    resolved = next(iter(matches))
+    if resolved != package:
+        ic(package, resolved)
+    return resolved
+
+
+def _qualify_atom(package: str) -> str:
+    """Like qualify_package, but preserves a trailing -version on bare input."""
+    if (
+        package.startswith("@")
+        or "/" in package
+        or package.startswith(("=", ">", "<", "~", "!"))
+    ):
+        return package
+    name = _strip_version(package)
+    if name != package:
+        return qualify_package(name) + package[len(name) :]
+    return qualify_package(package)
+
+
+def package_atom_installed(pkg: str) -> bool:
     _c = hs.Command("qlist")
     _c = _c.bake("-ICve", pkg)
     try:
@@ -46,7 +120,7 @@ def package_atom_installed(pkg):
     return True
 
 
-def portage_categories():
+def portage_categories() -> list[str]:
     categories_path = (
         Path(str(hs.Command("portageq")("get_repo_path", "/", "gentoo").strip()))
         / Path("profiles")
@@ -56,12 +130,10 @@ def portage_categories():
         lines = fh.readlines()
     categories = [c.strip() for c in lines]
     categories.append("dev-zig")
-    del lines
-    del categories_path
     return categories
 
 
-def get_latest_postgresql_version():
+def get_latest_postgresql_version() -> str:
     glob_pattern = "/etc/init.d/postgresql-*"
     ic(glob_pattern)
     results = glob.glob(glob_pattern)
@@ -72,23 +144,18 @@ def get_latest_postgresql_version():
     ic(versions)
     versions = sort_versions(versions)
     ic(versions)
-
     return versions[0]
 
 
-def get_use_flags_for_package(package: str):
+def get_use_flags_for_package(package: str) -> list[str]:
+    package = qualify_package(package)
     result = hs.Command("equery")("uses", package, _tty_out=False)
     result = result.strip()
-    # icp(result)
-    result = [r[1:] for r in result.split("\n")]
-
-    # icp(result)
-    return result
+    return [r[1:] for r in result.split("\n")]
 
 
-def resolve_package_name(
-    package: str,
-) -> str:
+def resolve_package_name(package: str) -> str:
+    package = _qualify_atom(package)
     result = hs.Command("equery")(
         "--quiet",
         "list",
@@ -96,13 +163,11 @@ def resolve_package_name(
     )
     result = result.strip()
     ic(result)
-    # result = [r[1:] for r in result.split('\n')]
     return result
 
 
-def get_python_dependency(
-    package: str,
-) -> bool:
+def get_python_dependency(package: str) -> bool:
+    package = qualify_package(package)
     result = hs.Command("equery")(
         "--quiet",
         "uses",
@@ -116,18 +181,11 @@ def get_python_dependency(
     return False
 
 
-def generate_ebuild_dependency_line(
-    package: str,
-):
-    package = resolve_package_name(
-        package,
-    )
+def generate_ebuild_dependency_line(package: str) -> str:
+    package = resolve_package_name(package)
     line = f"\t{package}"
-    if get_python_dependency(
-        package,
-    ):
+    if get_python_dependency(package):
         line += "[${PYTHON_USEDEP}]"
-
     ic(line)
     return line
 
@@ -139,7 +197,7 @@ def install(
     nice: bool = False,
     oneshot: bool = False,
     noreplace: bool = False,
-):
+) -> None:
     install_packages(
         packages=(package,),
         force=force,
@@ -167,6 +225,7 @@ def install_packages(
     oneshot: bool = False,
     noreplace: bool = False,
 ) -> None:
+    packages = tuple(_qualify_atom(p) for p in packages)
     ic(packages, upgrade_only)
 
     _env = os.environ.copy()
@@ -193,14 +252,11 @@ def install_packages(
 
         if noreplace:
             emerge_command.bake("--noreplace")
-
         if oneshot:
             emerge_command.bake("--oneshot")
-
         if upgrade_only:
             emerge_command.bake("-u")
 
-        package = None
         for package in packages:
             emerge_command.bake(package)
 
@@ -231,27 +287,22 @@ def install_packages(
 
         if noreplace:
             emerge_command.bake("--noreplace")
-
         if oneshot:
             emerge_command.bake("--oneshot")
-
         if upgrade_only:
             emerge_command.bake("-u")
 
-        package = None
         for package in packages:
             ic(package)
             emerge_command.bake(package)
 
-        if package:
-            ic(package)
+        if packages:
             emerge_command("-p", _out=sys.stdout, _err=sys.stderr)
             emerge_command(_out=sys.stdout, _err=sys.stderr)
 
 
-def mask_package(
-    package: str,
-) -> None:
+def mask_package(package: str) -> None:
+    package = _qualify_atom(package)
     line = f"{package}"
     _pkg = package.split("/")[-1]
     ic(line)
@@ -263,9 +314,8 @@ def mask_package(
     )
 
 
-def add_accept_keyword(
-    package: str,
-) -> None:
+def add_accept_keyword(package: str) -> None:
+    package = _qualify_atom(package)
     line = f"={package} **"
     _pkg = package.split("/")[-1]
     ic(line)
@@ -283,6 +333,31 @@ def add_accept_keyword(
             comment_marker="#",
             ignore_leading_whitespace=True,
         )
+
+
+def set_use_flag_for_package(*, package: str, flag: str) -> None:
+    package = qualify_package(package)
+    valid_flags = get_use_flags_for_package(package=package)
+
+    package_group = package.split("/")[0]
+    package_name = package.split("/")[1]
+    raw_flag = flag[1:] if flag.startswith("-") else flag
+
+    icp(raw_flag, valid_flags)
+    if raw_flag not in valid_flags:
+        raise click.ClickException(
+            f"USE flag '{raw_flag}' is not valid for {package}. "
+            f"Valid flags: {', '.join(sorted(valid_flags))}"
+        )
+
+    line = f"{package} {flag}"
+    icp(line)
+    ensure_line_in_config_file(
+        path=Path(f"/etc/portage/package.use/{package_group}/{package_name}"),
+        line=line,
+        comment_marker="#",
+        ignore_leading_whitespace=True,
+    )
 
 
 @click.group(no_args_is_help=True, cls=AHGroup)
@@ -347,10 +422,6 @@ def _mask_package(
         ic=ic,
         gvd=gvd,
     )
-
-    if not package.startswith("@"):
-        assert "/" in package
-
     mask_package(package=package)
 
 
@@ -373,44 +444,15 @@ def use_flags_for_package(
         gvd=gvd,
     )
 
-    if not package.startswith("@"):
-        assert "/" in package
-    flags = get_use_flags_for_package(
-        package=package,
-    )
+    package = qualify_package(package)
+    flags = get_use_flags_for_package(package=package)
     for flag in flags:
         output(
-            flag.encode("utf8"),  # hm.
+            flag.encode("utf8"),
             reason=package,
             dict_output=dict_output,
             tty=tty,
         )
-
-
-def set_use_flag_for_package(*, package: str, flag: str):
-    valid_flags = get_use_flags_for_package(
-        package=package,
-    )
-
-    if not package.startswith("@"):
-        assert "/" in package
-    package_group = package.split("/")[0]
-    package_name = package.split("/")[1]
-    raw_flag = flag
-    if flag.startswith("-"):
-        raw_flag = flag[1:]
-
-    icp(raw_flag, valid_flags)
-    assert raw_flag in valid_flags
-
-    line = f"{package} {flag}"
-    icp(line)
-    ensure_line_in_config_file(
-        path=Path(f"/etc/portage/package.use/{package_group}/{package_name}"),
-        line=line,
-        comment_marker="#",
-        ignore_leading_whitespace=True,
-    )
 
 
 @cli.command("set-use-flag-for-package")
@@ -456,15 +498,14 @@ def generate_patched_package_source(
         gvd=gvd,
     )
 
-    if not package.startswith("@"):
-        assert "/" in package
+    package = _qualify_atom(package)
     sh_oet = {"_out": sys.stdout, "_err": sys.stderr, "_tee": True}
 
-    package = Path(package)  # pathlib abuse, but works nice
-    icp(package)
+    package_path = Path(package)  # pathlib abuse, but works nice
+    icp(package_path)
     package_location_command = hs.Command("equery")
     icp(package_location_command)
-    package_location_command.bake("-q", "meta", package)
+    package_location_command.bake("-q", "meta", package_path)
     icp(package_location_command)
     result = package_location_command(**sh_oet)
     package_location_command_stdout = result.strip().splitlines()
@@ -477,40 +518,20 @@ def generate_patched_package_source(
         raise FileNotFoundError(package_location_command_stdout)
     ic(package_location)
 
-    package_name_and_version = package.name
+    package_name_and_version = package_path.name
     ebuild_path = Path(os.fsdecode(package_location)) / Path(
         os.fsdecode(package_name_and_version + ".ebuild")
     )
     ic(ebuild_path)
 
-    ebuild_clean_command = hs.Command("ebuild")(
-        ebuild_path,
-        "clean",
-        _fg=True,
-    )
-    ebuild_unpack_command = hs.Command("ebuild")(
-        ebuild_path,
-        "unpack",
-        _fg=True,
-    )
-    ebuild_prepare_command = hs.Command("ebuild")(
-        ebuild_path,
-        "prepare",
-        _fg=True,
-    )
-    ebuild_configure_command = hs.Command("ebuild")(
-        ebuild_path,
-        "configure",
-        _fg=True,
-    )
-    work_dir = Path("/var/tmp/portage") / package / Path("work")
+    hs.Command("ebuild")(ebuild_path, "clean", _fg=True)
+    hs.Command("ebuild")(ebuild_path, "unpack", _fg=True)
+    hs.Command("ebuild")(ebuild_path, "prepare", _fg=True)
+    hs.Command("ebuild")(ebuild_path, "configure", _fg=True)
+
+    work_dir = Path("/var/tmp/portage") / package_path / Path("work")
     ic(work_dir)
-    hs.Command("chmod")(
-        "-R",
-        "a+rx",
-        work_dir.parent,
-        _fg=True,
-    )
+    hs.Command("chmod")("-R", "a+rx", work_dir.parent, _fg=True)
 
 
 @cli.command()
@@ -532,29 +553,24 @@ def files_provided_by_package(
         gvd=gvd,
     )
 
+    package = qualify_package(package)
+
     qlist_command = hs.Command("qlist")
     qlist_command.bake("--exact", package)
 
-    if not package.startswith("@"):
-        assert "/" in package
-    _tty_out = {}
-    _oe = {}
+    _tty_out: dict = {}
+    _oe: dict = {}
     if not tty:
         _tty_out = {"_tty_out": False}
     if tty:
-        _oe = {
-            "_out": sys.stdout,
-            "_err": sys.stderr,
-        }
+        _oe = {"_out": sys.stdout, "_err": sys.stderr}
     ic(tty, _tty_out, _oe)
     icp(qlist_command)
-    qlist_command = qlist_command(_tee=not tty, **_oe, **_tty_out).strip()
+    qlist_result = qlist_command(_tee=not tty, **_oe, **_tty_out).strip()
     if tty:
         return
 
-    qlist_stdout_lines = qlist_command.splitlines()
-
-    for line in qlist_stdout_lines:
+    for line in qlist_result.splitlines():
         if gvd:
             ic(line)
         output(
@@ -565,7 +581,7 @@ def files_provided_by_package(
         )
 
 
-@click.command()
+@cli.command()
 @click.argument("package", type=str, nargs=1)
 @click_add_options(click_global_options)
 @click.pass_context
@@ -583,9 +599,8 @@ def emerge_keepwork(
         ic=ic,
         gvd=gvd,
     )
-    if not package.startswith("@"):
-        assert "/" in package
 
+    package = _qualify_atom(package)
     hs.Command("emerge")(
         "--verbose",
         "--tree",
@@ -626,10 +641,7 @@ def _install_package(
         gvd=gvd,
     )
 
-    for package in packages:
-        if not package.startswith("@"):
-            assert "/" in package
-
+    packages = tuple(_qualify_atom(p) for p in packages)
     install_packages(
         packages=packages,
         force=force,
@@ -651,8 +663,6 @@ def _resolve_package(
     dict_output: bool,
     verbose: bool = False,
 ) -> None:
-    if not package.startswith("@"):
-        assert "/" in package
     tty, verbose = tvicgvd(
         ctx=ctx,
         verbose=verbose,
@@ -661,9 +671,7 @@ def _resolve_package(
         gvd=gvd,
     )
 
-    result = resolve_package_name(
-        package=package,
-    )
+    result = resolve_package_name(package=package)
     output(
         result,
         reason=package,
@@ -689,8 +697,7 @@ def _list(
         gvd=gvd,
     )
 
-    results = installed_packages()
-    for _ in results:
+    for _ in installed_packages():
         output(
             _,
             reason=None,
