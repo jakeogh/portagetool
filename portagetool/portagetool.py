@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import os
-import re
 import sys
 from collections.abc import Iterator
 from pathlib import Path
@@ -11,6 +10,11 @@ from signal import signal
 
 import click
 import hs
+import portage
+from portage.dep import Atom
+from portage.dep import dep_getkey
+from portage.dep import use_reduce
+from portage.versions import cpv_getkey
 from asserttool import ic
 from asserttool import icp
 from click_auto_help import AHGroup
@@ -25,21 +29,24 @@ from mptool import output
 signal(SIGPIPE, SIG_DFL)
 
 
-# Portage version suffix on a cat/name-ver atom: leading `-`, then version per PMS-ish.
-_VER_RE = re.compile(
-    r"-(\d+(?:\.\d+)*[a-z]?(?:_(?:alpha|beta|pre|rc|p)\d*)*(?:-r\d+)?)$"
-)
+def _portdb():
+    return portage.db[portage.root]["porttree"].dbapi
+
+
+def _vardb():
+    return portage.db[portage.root]["vartree"].dbapi
 
 
 def _strip_version(atom: str) -> str:
-    m = _VER_RE.search(atom)
-    return atom[: m.start()] if m else atom
+    # cpv_getkey is portage's own parser; it returns the input unchanged when
+    # there is no version to strip
+    return cpv_getkey(atom) or atom
 
 
 def qualify_package(package: str) -> str:
     # returns unchanged if already qualified (cat/name), an atom set (@name),
-    # or a versioned/operator atom; otherwise resolves the unique cat/name via
-    # equery (installed first, then tree and overlays)
+    # or a versioned/operator atom; otherwise resolves the unique cat/name
+    # against the installed packages first, then the whole tree
     if (
         package.startswith("@")
         or "/" in package
@@ -48,21 +55,8 @@ def qualify_package(package: str) -> str:
         return package
 
     matches: set[str] = set()
-    for extra in ([], ["-ipo"]):
-        try:
-            result = str(
-                hs.Command("equery")("--quiet", "list", *extra, package, _tty_out=False)
-            )
-        except hs.ErrorReturnCode:
-            result = ""
-        for line in result.splitlines():
-            line = line.strip()
-            if not line:
-                continue
-            line = line.split(":", 1)[0]  # drop slot/repo suffix
-            cat_name = _strip_version(line)
-            if "/" in cat_name:
-                matches.add(cat_name)
+    for db in (_vardb(), _portdb()):
+        matches = {cp for cp in db.cp_all() if cp.split("/", 1)[1] == package}
         if matches:
             break
 
@@ -94,23 +88,11 @@ def _qualify_atom(package: str) -> str:
 
 
 def package_atom_installed(pkg: str) -> bool:
-    _c = hs.Command("qlist")
-    _c.bake("-ICve", pkg)
-    try:
-        _c()
-    except hs.ErrorReturnCode_1:
-        return False
-    return True
+    return bool(_vardb().match(pkg))
 
 
 def portage_categories() -> list[str]:
-    categories_path = (
-        Path(str(hs.Command("portageq")("get_repo_path", "/", "gentoo")).strip())
-        / "profiles"
-        / "categories"
-    )
-    with open(categories_path, "r", encoding="utf8") as fh:
-        categories = [c.strip() for c in fh.readlines()]
+    categories = list(portage.settings.categories)
     categories.append("dev-zig")
     return categories
 
@@ -128,37 +110,34 @@ def get_latest_postgresql_version() -> str:
 
 def get_use_flags_for_package(package: str) -> list[str]:
     package = qualify_package(package)
-    result = str(hs.Command("equery")("uses", package, _tty_out=False)).strip()
-    return [r[1:] for r in result.split("\n")]
+    vdb = _vardb()
+    installed = vdb.match(package)
+    if not installed:
+        raise click.ClickException(f"'{package}' is not installed")
+    use, iuse = vdb.aux_get(installed[0], ["USE", "IUSE"])
+    enabled = set(use.split())
+    flags = []
+    for flag in sorted({f.lstrip("+-") for f in iuse.split()}):
+        flags.append(flag if flag in enabled else f"-{flag}")
+    return flags
 
 
 def resolve_package_name(package: str) -> str:
     package = _qualify_atom(package)
-    result = str(
-        hs.Command("equery")(
-            "--quiet",
-            "list",
-            package,
-        )
-    ).strip()
+    result = _portdb().xmatch("bestmatch-visible", package)
+    if not result:
+        raise click.ClickException(f"No visible package matches '{package}'")
     ic(result)
     return result
 
 
 def get_python_dependency(package: str) -> bool:
     package = qualify_package(package)
-    result = str(
-        hs.Command("equery")(
-            "--quiet",
-            "uses",
-            package,
-        )
-    ).strip()
-    for line in result.splitlines():
-        ic(line)
-        if line.startswith("+python_targets_python"):
-            return True
-    return False
+    cpv = _portdb().xmatch("bestmatch-visible", package)
+    if not cpv:
+        return False
+    (iuse,) = _portdb().aux_get(cpv, ["IUSE"])
+    return any(f.lstrip("+-").startswith("python_targets_python") for f in iuse.split())
 
 
 def generate_ebuild_dependency_line(package: str) -> str:
@@ -168,6 +147,56 @@ def generate_ebuild_dependency_line(package: str) -> str:
         line += "[${PYTHON_USEDEP}]"
     ic(line)
     return line
+
+
+
+def dependency_closure(
+    atom: str,
+    *,
+    build_deps: bool = True,
+) -> set[str]:
+    # Walks DEPEND/RDEPEND/BDEPEND transitively via the portage API, resolving
+    # each atom to its best visible version. This answers "which packages does
+    # building this pull in" without shelling out to emerge, and returns
+    # cat/pkg keys rather than versioned cpvs.
+    portdb = _portdb()
+    settings = portage.settings
+    wants = ["DEPEND", "RDEPEND", "BDEPEND"] if build_deps else ["RDEPEND"]
+
+    seen: set[str] = set()
+    pending = [_qualify_atom(atom)]
+    while pending:
+        current = pending.pop()
+        cpv = portdb.xmatch("bestmatch-visible", current)
+        if not cpv:
+            continue
+        key = cpv_getkey(cpv)
+        if key in seen:
+            continue
+        seen.add(key)
+
+        use = settings.get("USE", "").split()
+        for depstr in portdb.aux_get(cpv, wants):
+            if not depstr:
+                continue
+            for dep in use_reduce(
+                depstr,
+                uselist=use,
+                opconvert=False,
+                flat=True,
+                token_class=Atom,
+                is_valid_flag=lambda _flag: True,
+            ):
+                if dep in ("||", "(", ")"):
+                    continue
+                dep_key = dep_getkey(str(dep))
+                if dep_key.startswith("!"):
+                    continue
+                if dep_key not in seen:
+                    pending.append(dep_key)
+
+    ic(len(seen))
+    return seen
 
 
 def install(
@@ -189,9 +218,7 @@ def install(
 
 
 def installed_packages() -> Iterator[str]:
-    qlist_command = hs.Command("qlist")
-    qlist_command.bake("-IRCv")
-    yield from str(qlist_command()).strip().split("\n")
+    yield from sorted(_vardb().cpv_all())
 
 
 def install_packages(
@@ -459,18 +486,14 @@ def generate_patched_package_source(
 
     package = _qualify_atom(package)
 
-    package_path = Path(package)
-    icp(package_path)
-    package_location_command = hs.Command("equery")
-    package_location_command.bake("-q", "meta", package_path.as_posix())
-    icp(package_location_command)
-    result = str(
-        package_location_command(_out=sys.stdout, _err=sys.stderr, _tee=True)
-    )
-    package_location = None
-    for line in result.strip().splitlines():
-        if line.startswith("Location: "):
-            package_location = line.split(":")[-1].strip()
+    cpv = _portdb().xmatch("bestmatch-visible", package)
+    if not cpv:
+        raise click.ClickException(f"No visible package matches '{package}'")
+    ebuild_path = _portdb().findname(cpv)
+    if not ebuild_path:
+        raise click.ClickException(f"No ebuild found for '{cpv}'")
+    package_location = Path(ebuild_path).parent.as_posix()
+    icp(package_location)
 
     if not package_location:
         raise FileNotFoundError(result)
@@ -509,20 +532,17 @@ def files_provided_by_package(
 
     package = qualify_package(package)
 
-    qlist_command = hs.Command("qlist")
-    qlist_command.bake("--exact", package)
-
-    _kwargs: dict = {"_tee": not tty}
+    vdb = _vardb()
+    installed = vdb.match(package)
+    if not installed:
+        raise click.ClickException(f"'{package}' is not installed")
+    files = sorted(vdb._dblink(installed[0]).getcontents())
     if tty:
-        _kwargs |= {"_out": sys.stdout, "_err": sys.stderr}
-    else:
-        _kwargs |= {"_tty_out": False}
-    icp(qlist_command)
-    qlist_result = str(qlist_command(**_kwargs)).strip()
-    if tty:
+        for line in files:
+            print(line)
         return
 
-    for line in qlist_result.splitlines():
+    for line in files:
         if gvd:
             ic(line)
         output(
@@ -651,6 +671,36 @@ def _list(
         output(
             _package,
             reason=None,
+            dict_output=dict_output,
+            tty=tty,
+        )
+
+
+@cli.command("dependency-closure")
+@click.argument("atom", type=str, nargs=1)
+@click.option("--runtime-only", is_flag=True)
+@click_add_options(click_global_options)
+@click.pass_context
+def _dependency_closure(
+    ctx: click.Context,
+    atom: str,
+    runtime_only: bool,
+    verbose_inf: bool,
+    dict_output: bool,
+    verbose: bool = False,
+) -> None:
+    tty, verbose = tvicgvd(
+        ctx=ctx,
+        verbose=verbose,
+        verbose_inf=verbose_inf,
+        ic=ic,
+        gvd=gvd,
+    )
+
+    for package in sorted(dependency_closure(atom, build_deps=not runtime_only)):
+        output(
+            package,
+            reason=atom,
             dict_output=dict_output,
             tty=tty,
         )

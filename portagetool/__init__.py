@@ -1,4 +1,5 @@
 from .portagetool import add_accept_keyword
+from .portagetool import dependency_closure
 from .portagetool import get_latest_postgresql_version
 from .portagetool import get_use_flags_for_package
 from .portagetool import install
