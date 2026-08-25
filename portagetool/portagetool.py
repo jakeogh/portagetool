@@ -20,11 +20,9 @@ from asserttool import icp
 from click_auto_help import AHGroup
 from clicktool import click_add_options
 from clicktool import click_global_options
-from clicktool import tvicgvd
+from clicktool import tvic
 from filetool import ensure_line_in_config_file
-from globalverbose import gvd
 from mathtool import sort_versions
-from mptool import output
 
 signal(SIGPIPE, SIG_DFL)
 
@@ -357,12 +355,11 @@ def cli(
     dict_output: bool,
     verbose: bool = False,
 ) -> None:
-    tty, verbose = tvicgvd(
+    tty, verbose = tvic(
         ctx=ctx,
         verbose=verbose,
         verbose_inf=verbose_inf,
         ic=ic,
-        gvd=gvd,
     )
 
 
@@ -375,20 +372,15 @@ def _get_latest_postgresql_version(
     dict_output: bool,
     verbose: bool = False,
 ) -> None:
-    tty, verbose = tvicgvd(
+    tty, verbose = tvic(
         ctx=ctx,
         verbose=verbose,
         verbose_inf=verbose_inf,
         ic=ic,
-        gvd=gvd,
     )
 
-    output(
-        get_latest_postgresql_version(),
-        reason=None,
-        dict_output=dict_output,
-        tty=tty,
-    )
+    version = get_latest_postgresql_version()
+    print({None: version} if dict_output else version, flush=True)
 
 
 @cli.command("mask-package")
@@ -402,12 +394,11 @@ def _mask_package(
     dict_output: bool,
     verbose: bool = False,
 ) -> None:
-    tty, verbose = tvicgvd(
+    tty, verbose = tvic(
         ctx=ctx,
         verbose=verbose,
         verbose_inf=verbose_inf,
         ic=ic,
-        gvd=gvd,
     )
     mask_package(package=package)
 
@@ -423,22 +414,17 @@ def use_flags_for_package(
     dict_output: bool,
     verbose: bool = False,
 ) -> None:
-    tty, verbose = tvicgvd(
+    tty, verbose = tvic(
         ctx=ctx,
         verbose=verbose,
         verbose_inf=verbose_inf,
         ic=ic,
-        gvd=gvd,
     )
 
     package = qualify_package(package)
     for flag in get_use_flags_for_package(package=package):
-        output(
-            flag.encode("utf8"),
-            reason=package,
-            dict_output=dict_output,
-            tty=tty,
-        )
+        encoded = flag.encode("utf8")
+        print({package: encoded} if dict_output else encoded, flush=True)
 
 
 @cli.command("set-use-flag-for-package")
@@ -454,12 +440,11 @@ def _set_use_flag_for_package(
     dict_output: bool,
     verbose: bool = False,
 ) -> None:
-    tty, verbose = tvicgvd(
+    tty, verbose = tvic(
         ctx=ctx,
         verbose=verbose,
         verbose_inf=verbose_inf,
         ic=ic,
-        gvd=gvd,
     )
 
     set_use_flag_for_package(package=package, flag=flag)
@@ -476,12 +461,11 @@ def generate_patched_package_source(
     dict_output: bool,
     verbose: bool = False,
 ) -> None:
-    tty, verbose = tvicgvd(
+    tty, verbose = tvic(
         ctx=ctx,
         verbose=verbose,
         verbose_inf=verbose_inf,
         ic=ic,
-        gvd=gvd,
     )
 
     package = _qualify_atom(package)
@@ -522,12 +506,11 @@ def files_provided_by_package(
     dict_output: bool,
     verbose: bool = False,
 ) -> None:
-    tty, verbose = tvicgvd(
+    tty, verbose = tvic(
         ctx=ctx,
         verbose=verbose,
         verbose_inf=verbose_inf,
         ic=ic,
-        gvd=gvd,
     )
 
     package = qualify_package(package)
@@ -537,20 +520,8 @@ def files_provided_by_package(
     if not installed:
         raise click.ClickException(f"'{package}' is not installed")
     files = sorted(vdb._dblink(installed[0]).getcontents())
-    if tty:
-        for line in files:
-            print(line)
-        return
-
     for line in files:
-        if gvd:
-            ic(line)
-        output(
-            line,
-            reason=None,
-            dict_output=dict_output,
-            tty=tty,
-        )
+        print({None: line} if dict_output else line, flush=True)
 
 
 @cli.command()
@@ -564,12 +535,11 @@ def emerge_keepwork(
     dict_output: bool,
     verbose: bool = False,
 ) -> None:
-    tty, verbose = tvicgvd(
+    tty, verbose = tvic(
         ctx=ctx,
         verbose=verbose,
         verbose_inf=verbose_inf,
         ic=ic,
-        gvd=gvd,
     )
 
     package = _qualify_atom(package)
@@ -605,12 +575,11 @@ def _install_package(
     upgrade_only: bool,
     verbose: bool = False,
 ) -> None:
-    tty, verbose = tvicgvd(
+    tty, verbose = tvic(
         ctx=ctx,
         verbose=verbose,
         verbose_inf=verbose_inf,
         ic=ic,
-        gvd=gvd,
     )
 
     install_packages(
@@ -634,20 +603,15 @@ def _resolve_package(
     dict_output: bool,
     verbose: bool = False,
 ) -> None:
-    tty, verbose = tvicgvd(
+    tty, verbose = tvic(
         ctx=ctx,
         verbose=verbose,
         verbose_inf=verbose_inf,
         ic=ic,
-        gvd=gvd,
     )
 
-    output(
-        resolve_package_name(package=package),
-        reason=package,
-        dict_output=dict_output,
-        tty=tty,
-    )
+    resolved = resolve_package_name(package=package)
+    print({package: resolved} if dict_output else resolved, flush=True)
 
 
 @cli.command("list")
@@ -659,12 +623,11 @@ def _list(
     dict_output: bool,
     verbose: bool = False,
 ) -> None:
-    tty, verbose = tvicgvd(
+    tty, verbose = tvic(
         ctx=ctx,
         verbose=verbose,
         verbose_inf=verbose_inf,
         ic=ic,
-        gvd=gvd,
     )
 
     for _package in installed_packages():
@@ -689,12 +652,11 @@ def _dependency_closure(
     dict_output: bool,
     verbose: bool = False,
 ) -> None:
-    tty, verbose = tvicgvd(
+    tty, verbose = tvic(
         ctx=ctx,
         verbose=verbose,
         verbose_inf=verbose_inf,
         ic=ic,
-        gvd=gvd,
     )
 
     for package in sorted(dependency_closure(atom, build_deps=not runtime_only)):
