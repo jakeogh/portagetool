@@ -227,9 +227,10 @@ def install_packages(
     nice: bool = False,
     oneshot: bool = False,
     noreplace: bool = False,
+    changed_use: bool = False,
 ) -> None:
     packages = tuple(_qualify_atom(p) for p in packages)
-    ic(packages, upgrade_only)
+    ic(packages, upgrade_only, changed_use)
 
     _env = os.environ.copy()
 
@@ -261,6 +262,8 @@ def install_packages(
         emerge_command.bake("--oneshot")
     if upgrade_only:
         emerge_command.bake("-u")
+    if changed_use:
+        emerge_command.bake("--changed-use")
 
     for package in packages:
         ic(package)

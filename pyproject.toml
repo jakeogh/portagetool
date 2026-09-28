@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "portagetool"
-version = "1!0.0.1787633968"
+version = "1!0.0.1790565629"
 description = "Common functions for portage"
 authors = [
     { name = "Justin Keogh", email = "github.com@v6y.net" },
